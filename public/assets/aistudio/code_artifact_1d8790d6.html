@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 소비 습관 정밀 진단 테스트 & 소비 습관 개선</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html2canvas CDN (정밀 결과 카드 PNG 저장용) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Pretendard 웹폰트 CDN -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            appBg: '#F4F7FB',
+            brandBlue: '#2563EB',
+            brandBlueDark: '#1D4ED8',
+            brandBlueLight: '#EFF6FF',
+            brandMint: '#10B981',
+            brandMintDark: '#059669',
+            brandMintLight: '#ECFDF5',
+            inkDark: '#111827',
+            inkGray: '#4B5563',
+            inkSub: '#8B95A1',
+            lineGray: '#E5E7EB',
+          },
+          boxShadow: {
+            fintech: '0 10px 30px rgba(17, 24, 39, 0.045)',
+            cta: '0 12px 28px rgba(37, 99, 235, 0.24)',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #F4F7FB;
+      color: #111827;
+      -webkit-tap-highlight-color: transparent;
+      word-break: keep-all;
+    }
+
+    /* 부드러운 화면 전환 애니메이션 */
+    .fade-slide-in {
+      animation: fadeSlideIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 핀테크 스타일 커스텀 슬라이더 */
+    input[type="range"].fintech-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #E5E7EB;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"].fintech-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 3px solid #2563EB;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.32);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    input[type="range"].fintech-slider::-webkit-slider-thumb:hover,
+    input[type="range"].fintech-slider:active::-webkit-slider-thumb {
+      transform: scale(1.13);
+      border-color: #10B981;
+    }
+    input[type="range"].fintech-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 3px solid #2563EB;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.32);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    /* 체크리스트 완료 상태 */
+    .mission-item.checked .mission-box {
+      background-color: #10B981;
+      border-color: #10B981;
+    }
+    .mission-item.checked .mission-text {
+      color: #8B95A1;
+      text-decoration: line-through;
+    }
+
+    /* 원형 게이지 애니메이션 */
+    .score-ring-circle {
+      transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* 모달 백드롭 */
+    .modal-fade {
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start py-4 px-3.5 sm:py-8 sm:px-4">
+
+  <!-- 메인 모바일 중심 앱 뷰 컨테이너 (최대 폭 540px) -->
+  <main class="w-full max-w-[540px] mx-auto relative">
+
+    <!-- 상단 글로벌 브랜드 헤더 -->
+    <header class="flex items-center justify-between px-1.5 pb-4">
+      <div class="flex items-center gap-2 cursor-pointer" onclick="goHomeView()">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brandBlue to-brandMint flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+          ₩
+        </div>
+        <div>
+          <span class="font-extrabold text-[15px] tracking-tight text-inkDark">머니체크 <span class="text-brandBlue">PRO</span></span>
+          <span class="hidden sm:inline-block ml-1.5 text-[11px] font-semibold text-inkSub">정밀 소비 분석 엔진</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="autosave-indicator" class="hidden items-center gap-1 text-[11px] font-bold text-brandMintDark bg-brandMintLight px-2.5 py-1 rounded-full border border-brandMint/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-brandMint"></span>
+          자동 저장됨
+        </span>
+        <span class="text-[11.5px] font-semibold text-inkGray bg-white px-3 py-1 rounded-full border border-lineGray shadow-2xs">
+          12문항 정밀진단
+        </span>
+      </div>
+    </header>
+
+    <!-- =====================================================================
+         1. 시작 화면 (Start View) & 세그먼트 분기 + 이어보기 배너
+    ====================================================================== -->
+    <section id="start-view" class="bg-white rounded-[26px] p-6 sm:p-8 shadow-fintech fade-slide-in">
+
+      <!-- LocalStorage 이전 정밀 진단 이어보기 배너 -->
+      <div id="resume-banner" class="hidden mb-6 p-4 rounded-2xl bg-gradient-to-r from-brandBlueLight to-brandMintLight border border-brandBlue/20 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-brandBlue mb-0.5">
+            <span>📌</span> [이어보기] 저장된 정밀 진단 리포트
+          </div>
+          <p id="resume-banner-text" class="text-[13.5px] font-extrabold text-inkDark truncate">
+            지난 정밀 진단 리포트 바로 보기
+          </p>
+        </div>
+        <button
+          type="button"
+          onclick="restoreSavedReport()"
+          class="shrink-0 px-3.5 py-2.5 rounded-xl bg-brandBlue hover:bg-brandBlueDark text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+        >
+          바로 보기 →
+        </button>
+      </div>
+
+      <!-- 상단 정밀 진단 스펙 배지 -->
+      <div class="flex flex-wrap items-center gap-1.5 mb-4">
+        <span class="inline-flex items-center gap-1.5 bg-brandBlueLight text-brandBlue text-xs font-extrabold px-3 py-1.5 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-brandBlue animate-pulse"></span>
+          정밀 다차원 분석 V3.0
+        </span>
+        <span class="inline-flex items-center bg-brandMintLight text-brandMintDark text-xs font-bold px-3 py-1.5 rounded-full">
+          총 12문항 · 5단계 세밀 선택지
+        </span>
+      </div>
+
+      <!-- 메인 타이틀 -->
+      <h1 class="text-[25px] sm:text-[30px] font-extrabold leading-[1.3] tracking-tight text-inkDark mb-3">
+        데이터로 짚어내는 내 지갑 구멍<br />
+        <span class="text-brandBlue">소비 습관 정밀 진단 테스트</span>
+      </h1>
+      <p class="text-[14.5px] text-inkGray leading-relaxed mb-6">
+        단순 심리테스트를 넘어 <strong>6대 소비 지표 다차원 분석</strong>으로 주 유형과 부 성향, 실제 응답 기반 <strong>취약 누수 포인트 TOP 2</strong>까지 정확히 진단합니다.
+      </p>
+
+      <!-- 정밀 진단 핵심 특징 요약 바 -->
+      <div class="grid grid-cols-3 gap-2 mb-6 text-center">
+        <div class="bg-appBg rounded-2xl py-3 px-2 border border-lineGray/60">
+          <p class="text-[11px] font-semibold text-inkSub mb-0.5">정밀 문항 구성</p>
+          <p class="text-[14px] font-extrabold text-inkDark">12문항 × 5지선다</p>
+        </div>
+        <div class="bg-appBg rounded-2xl py-3 px-2 border border-lineGray/60">
+          <p class="text-[11px] font-semibold text-inkSub mb-0.5">다차원 역량 측정</p>
+          <p class="text-[14px] font-extrabold text-brandBlue">6대 소비 지표</p>
+        </div>
+        <div class="bg-appBg rounded-2xl py-3 px-2 border border-lineGray/60">
+          <p class="text-[11px] font-semibold text-inkSub mb-0.5">결과 세분화</p>
+          <p class="text-[14px] font-extrabold text-brandMintDark">6종 주·부 유형</p>
+        </div>
+      </div>
+
+      <!-- 사용자 그룹(세그먼트) 선택 -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2.5">
+          <label class="text-xs font-extrabold text-inkDark">
+            STEP 1. 현재 라이프스타일 그룹을 선택해 주세요
+          </label>
+          <span class="text-[11px] font-semibold text-brandBlue">맞춤 문항·단가 적용</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 대학생 / 취준생 -->
+          <button
+            type="button"
+            id="seg-student-btn"
+            onclick="selectSegment('student')"
+            class="text-left p-4 rounded-[20px] border-2 border-brandBlue bg-brandBlueLight/60 transition-all cursor-pointer relative"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-2xl">🎓</span>
+              <span id="seg-student-check" class="w-5 h-5 rounded-full bg-brandBlue text-white text-xs font-bold flex items-center justify-center">✓</span>
+            </div>
+            <p class="text-[15px] font-extrabold text-inkDark">대학생 / 취준생</p>
+            <p class="text-[12px] text-inkGray mt-0.5 leading-snug">용돈·알바비 관리, 학식·카페·편의점·배달 중심 12문항</p>
+          </button>
+
+          <!-- 직장인 / 프리랜서 -->
+          <button
+            type="button"
+            id="seg-worker-btn"
+            onclick="selectSegment('worker')"
+            class="text-left p-4 rounded-[20px] border-2 border-lineGray bg-white hover:border-brandBlue/40 transition-all cursor-pointer relative"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-2xl">💼</span>
+              <span id="seg-worker-check" class="w-5 h-5 rounded-full bg-appBg text-inkSub text-xs font-bold flex items-center justify-center">2</span>
+            </div>
+            <p class="text-[15px] font-extrabold text-inkDark">직장인 / 프리랜서</p>
+            <p class="text-[12px] text-inkGray mt-0.5 leading-snug">월급·고정비·할부 관리, 점심·커피·택시·쇼핑 중심 12문항</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- 6가지 정밀 소비 유형 미리보기 카드 -->
+      <div class="bg-appBg/80 rounded-[20px] p-4 mb-6 border border-lineGray/70">
+        <div class="flex items-center justify-between mb-2.5">
+          <p class="text-xs font-extrabold text-inkDark">도출 가능한 6가지 정밀 소비 유형</p>
+          <span class="text-[11px] font-medium text-inkSub">+ 부 성향 & 취약점 TOP 2</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[12px] font-bold">
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>🔥</span> 욜로 플렉서
+          </div>
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>☕</span> 소확행 수집가
+          </div>
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>💧</span> 고정비 누수형
+          </div>
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>🏷️</span> 가성비 착시 쇼퍼
+          </div>
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>⚖️</span> 스마트 실속파
+          </div>
+          <div class="bg-white rounded-xl px-2.5 py-2 text-inkGray flex items-center gap-1.5 border border-lineGray/50">
+            <span>💎</span> 짠테크 마스터
+          </div>
+        </div>
+      </div>
+
+      <!-- 시작 CTA 버튼 -->
+      <button
+        type="button"
+        onclick="startPrecisionQuiz()"
+        class="w-full py-4 px-6 rounded-[18px] bg-brandBlue hover:bg-brandBlueDark active:scale-[0.99] text-white font-extrabold text-[16px] shadow-cta transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <span id="start-cta-text">대학생/취준생 12문항 정밀 진단 시작하기</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </button>
+    </section>
+
+    <!-- =====================================================================
+         2. 12문항 × 5지선다 정밀 진단 화면 (Quiz View)
+    ====================================================================== -->
+    <section id="quiz-view" class="hidden bg-white rounded-[26px] p-5 sm:p-8 shadow-fintech">
+      <!-- 상단 컨트롤 헤더 -->
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <button
+          id="quiz-prev-btn"
+          type="button"
+          onclick="goPrevQuestion()"
+          class="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-inkGray hover:text-inkDark py-1.5 px-2.5 -ml-2 rounded-xl hover:bg-appBg transition-colors cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          이전 문항
+        </button>
+
+        <div class="flex items-center gap-2">
+          <span id="quiz-mode-pill" class="text-[11px] font-bold text-brandBlue bg-brandBlueLight px-2.5 py-1 rounded-full">
+            대학생/취준생
+          </span>
+          <div class="text-sm font-extrabold text-brandBlue tabular-nums">
+            <span id="quiz-step-num">1</span> <span class="text-inkSub font-semibold">/ 12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 프로그레스 바 -->
+      <div class="w-full h-2.5 bg-appBg rounded-full overflow-hidden mb-6">
+        <div
+          id="quiz-progress-bar"
+          class="h-full bg-gradient-to-r from-brandBlue to-brandMint rounded-full transition-all duration-300 ease-out"
+          style="width: 8.33%;"
+        ></div>
+      </div>
+
+      <!-- 문항 본문 영역 -->
+      <div id="quiz-card-body" class="fade-slide-in">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <span id="quiz-domain-tag" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-brandMintDark bg-brandMintLight px-3 py-1 rounded-full">
+            영역 1/6 · 예산·계획성
+          </span>
+          <span class="text-[11px] font-semibold text-inkSub">가장 가까운 실제 행동 1개를 선택하세요</span>
+        </div>
+
+        <h2 id="quiz-question-title" class="text-[19px] sm:text-[21px] font-extrabold text-inkDark leading-[1.4] mb-5">
+          질문 텍스트가 표시됩니다.
+        </h2>
+
+        <!-- 5단계 세밀 선택지 리스트 -->
+        <div id="quiz-options-list" class="space-y-2.5">
+          <!-- JS 동적 렌더링 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         3 ~ 6. 정밀 진단 결과 화면 (Result View)
+    ====================================================================== -->
+    <section id="result-view" class="hidden space-y-5 fade-slide-in">
+
+      <!-- [PNG 캡처 영역 시작] 주·부 유형 + 종합 소비 건강 점수 + 레이더 차트 요약 -->
+      <div id="capture-report-area" class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech space-y-5">
+
+        <!-- 상단 배지 & 세그먼트 표시 -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span id="res-primary-badge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-brandBlueLight text-brandBlue">
+              주 유형 배지
+            </span>
+            <span id="res-sub-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-brandMintLight text-brandMintDark">
+              부 성향 배지
+            </span>
+          </div>
+          <span id="res-segment-label" class="text-[11px] font-bold text-inkGray bg-appBg px-2.5 py-1 rounded-full">
+            대학생/취준생 기준
+          </span>
+        </div>
+
+        <!-- 주 유형 타이틀 & 아이콘 -->
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p id="res-subtitle" class="text-[13.5px] font-bold text-inkGray mb-1">부 성향이 결합된 한 줄 요약</p>
+            <h2 id="res-title" class="text-[23px] sm:text-[27px] font-extrabold text-inkDark leading-tight">
+              정밀 소비 유형 타이틀
+            </h2>
+          </div>
+          <div id="res-emoji" class="w-14 h-14 rounded-2xl bg-appBg flex items-center justify-center text-3xl shrink-0 border border-lineGray/60">
+            💎
+          </div>
+        </div>
+
+        <!-- 종합 소비 건강 점수 (원형 게이지 + 상위 퍼센트 + 참여자 비율) -->
+        <div class="rounded-[22px] bg-gradient-to-br from-[#F8FAFC] to-[#EFF6FF] border border-brandBlue/15 p-4 sm:p-5 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <!-- SVG 원형 점수 게이지 -->
+            <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg class="w-20 h-20 -rotate-90" viewBox="0 0 84 84">
+                <circle cx="42" cy="42" r="35" stroke="#E2E8F0" stroke-width="8" fill="none" />
+                <circle
+                  id="health-score-circle"
+                  class="score-ring-circle"
+                  cx="42"
+                  cy="42"
+                  r="35"
+                  stroke="#2563EB"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  fill="none"
+                  stroke-dasharray="219.91"
+                  stroke-dashoffset="219.91"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="health-score-num" class="text-[20px] font-extrabold text-inkDark leading-none">0</span>
+                <span class="text-[10px] font-bold text-inkSub mt-0.5">/ 100점</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                <span class="text-xs font-extrabold text-brandBlue">종합 소비 건강 점수</span>
+                <span id="health-percentile-badge" class="text-[11px] font-extrabold bg-brandBlue text-white px-2 py-0.5 rounded-md">
+                  상위 25%
+                </span>
+              </div>
+              <p id="health-grade-comment" class="text-[13px] font-bold text-inkDark leading-snug mb-1">
+                전반적인 지출 통제 상태 코멘트
+              </p>
+              <p id="res-participant-share" class="text-[11.5px] font-semibold text-inkSub">
+                전체 참여자 중 약 18%가 이 유형에 해당해요
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 유형 상세 해설 -->
+        <p id="res-description" class="text-[14px] text-inkGray leading-relaxed bg-appBg/75 rounded-2xl p-4">
+          유형 상세 해설 텍스트
+        </p>
+
+        <!-- SVG 육각형 레이더 차트 (6대 소비 역량 다각형 그래프) -->
+        <div class="pt-1">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-[15.5px] font-extrabold text-inkDark">6대 소비 역량 육각형 레이더 분석</h3>
+            <span class="text-[11px] font-semibold text-inkSub">영역별 100점 만점</span>
+          </div>
+
+          <div class="bg-appBg/60 rounded-2xl p-3 sm:p-4 flex flex-col items-center">
+            <svg id="radar-svg" viewBox="0 0 320 265" class="w-full max-w-[310px] h-auto overflow-visible">
+              <!-- JS로 육각형 그리드 + 데이터 폴리곤 + 꼭짓점 라벨 렌더링 -->
+            </svg>
+            <div class="flex items-center gap-4 text-[11px] font-bold text-inkGray mt-1">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-brandBlue/70 inline-block"></span>나의 역량 다각형</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-brandMint inline-block"></span>권장 기준선 (70점)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [PNG 캡처 영역 끝] -->
+
+      <!-- 공유 & 저장 버튼 바 (PNG 저장 + 요약 텍스트 복사) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <button
+          type="button"
+          onclick="downloadReportImage()"
+          class="py-3.5 px-4 rounded-[18px] bg-inkDark hover:bg-black active:scale-[0.99] text-white font-bold text-[14px] shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4 text-brandMint" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>정밀 결과 카드 이미지 저장 (PNG)</span>
+        </button>
+
+        <button
+          type="button"
+          onclick="copyReportSummary()"
+          class="py-3.5 px-4 rounded-[18px] bg-white hover:bg-brandBlueLight/50 active:scale-[0.99] text-brandBlue font-bold text-[14px] border border-brandBlue/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>결과 요약 텍스트 복사</span>
+        </button>
+      </div>
+
+      <!-- [카드 2] 6대 소비 역량 세부 점수 막대그래프 -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-[17px] font-extrabold text-inkDark">6대 소비 지표 정밀 스코어</h3>
+          <span class="text-xs font-semibold text-inkSub">낮은 지표가 핵심 개선 포인트</span>
+        </div>
+        <div id="domain-bars-container" class="space-y-3.5">
+          <!-- JS 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- [카드 3] 개인 실제 응답 기반 '가장 취약한 소비 누수 포인트 TOP 2' 정밀 분석 리포트 -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech border-2 border-red-500/15">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🔍</span>
+            <h3 class="text-[17px] font-extrabold text-inkDark">개인 응답 기반 취약 누수 포인트 TOP 2</h3>
+          </div>
+          <span class="text-[11px] font-extrabold text-red-600 bg-red-50 px-2.5 py-1 rounded-full shrink-0">맞춤 정밀 진단</span>
+        </div>
+
+        <p id="leak-headline-comment" class="text-[13.5px] font-semibold text-inkGray leading-relaxed mb-4 bg-red-50/60 p-3.5 rounded-2xl border border-red-100">
+          응답 데이터를 분석한 핵심 누수 요약 코멘트
+        </p>
+
+        <div id="leak-cards-container" class="space-y-3">
+          <!-- JS로 실제 낮은 점수를 받은 2개 영역 + 선택했던 문항 패턴 상세 표시 -->
+        </div>
+      </div>
+
+      <!-- [카드 4] 소비 유형 궁합 2단 비교 카드 -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech">
+        <h3 class="text-[17px] font-extrabold text-inkDark mb-3.5">💞 소비 유형 케미스트리 궁합</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-brandMintLight/70 border border-brandMint/25 p-4">
+            <span class="inline-block text-[11px] font-extrabold text-brandMintDark mb-1">💚 환상의 소비 메이트</span>
+            <p id="match-best-name" class="text-[14.5px] font-extrabold text-inkDark mb-1">유형명</p>
+            <p id="match-best-desc" class="text-[12.5px] text-inkGray leading-snug">설명</p>
+          </div>
+          <div class="rounded-2xl bg-[#FFF7ED] border border-orange-400/25 p-4">
+            <span class="inline-block text-[11px] font-extrabold text-orange-600 mb-1">💥 지갑 열리는 파국 메이트</span>
+            <p id="match-worst-name" class="text-[14.5px] font-extrabold text-inkDark mb-1">유형명</p>
+            <p id="match-worst-desc" class="text-[12.5px] text-inkGray leading-snug">설명</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- [카드 5] 취약 영역 TOP 2 맞춤 동적 실천 미션 체크리스트 (4가지) -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="text-[17px] font-extrabold text-inkDark">나만의 맞춤 실천 미션 4가지</h3>
+          <span id="mission-progress-badge" class="text-xs font-extrabold text-brandMintDark bg-brandMintLight px-2.5 py-1 rounded-full">
+            0/4 달성
+          </span>
+        </div>
+        <p class="text-xs text-inkSub mb-4">취약 영역 TOP 2와 주 유형을 기반으로 자동 생성되었으며 체크 상태가 저장됩니다.</p>
+
+        <div id="missions-list-container" class="space-y-2.5">
+          <!-- JS 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- [카드 6] 5종 세밀화 절약 시뮬레이터 & 3년 복리 + 위시리스트 달성기 -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech border-2 border-brandBlue/15">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🧮</span>
+            <h3 class="text-[17.5px] font-extrabold text-inkDark">5대 지출 다이어트 & 복리 시뮬레이터</h3>
+          </div>
+          <span id="sim-unit-pill" class="text-[11px] font-bold text-brandBlue bg-brandBlueLight px-2.5 py-1 rounded-full shrink-0">
+            대학생 단가
+          </span>
+        </div>
+        <p class="text-xs text-inkGray mb-5">내 진단 응답을 바탕으로 초기 절약 추천치가 세팅되었습니다. 직접 조절해 보세요!</p>
+
+        <!-- 위시리스트 목표 설정 박스 -->
+        <div class="bg-appBg rounded-[20px] p-4 mb-6 border border-lineGray">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-extrabold text-inkDark">🎯 위시리스트 목표 설정</span>
+            <span class="text-[11px] font-semibold text-inkSub">입력 시 즉시 계산·저장</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
+            <div>
+              <label for="wish-title-input" class="block text-[11px] font-bold text-inkGray mb-1">목표명</label>
+              <input
+                id="wish-title-input"
+                type="text"
+                value="아이패드 에어"
+                placeholder="예: 아이패드 에어"
+                oninput="onWishlistChange()"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-lineGray text-sm font-bold text-inkDark focus:outline-none focus:border-brandBlue"
+              />
+            </div>
+            <div>
+              <label for="wish-amount-input" class="block text-[11px] font-bold text-inkGray mb-1">목표 금액 (원)</label>
+              <input
+                id="wish-amount-input"
+                type="number"
+                min="10000"
+                step="10000"
+                value="900000"
+                placeholder="예: 900000"
+                oninput="onWishlistChange()"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-lineGray text-sm font-bold text-inkDark focus:outline-none focus:border-brandBlue"
+              />
+            </div>
+          </div>
+
+          <!-- 프리셋 칩 -->
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <button type="button" onclick="setWishPreset('에어팟 프로', 350000)" class="text-[11px] font-bold bg-white hover:bg-brandBlueLight hover:text-brandBlue text-inkGray px-2.5 py-1 rounded-lg border border-lineGray transition-colors cursor-pointer">
+              🎧 에어팟 프로 35만
+            </button>
+            <button type="button" onclick="setWishPreset('아이패드 에어', 900000)" class="text-[11px] font-bold bg-white hover:bg-brandBlueLight hover:text-brandBlue text-inkGray px-2.5 py-1 rounded-lg border border-lineGray transition-colors cursor-pointer">
+              📱 아이패드 에어 90만
+            </button>
+            <button type="button" onclick="setWishPreset('도쿄 3박4일 여행', 1300000)" class="text-[11px] font-bold bg-white hover:bg-brandBlueLight hover:text-brandBlue text-inkGray px-2.5 py-1 rounded-lg border border-lineGray transition-colors cursor-pointer">
+              ✈️ 도쿄 여행 130만
+            </button>
+            <button type="button" onclick="setWishPreset('든든한 비상금 500만', 5000000)" class="text-[11px] font-bold bg-white hover:bg-brandBlueLight hover:text-brandBlue text-inkGray px-2.5 py-1 rounded-lg border border-lineGray transition-colors cursor-pointer">
+              💰 비상금 500만
+            </button>
+          </div>
+        </div>
+
+        <!-- 5가지 세밀 절약 슬라이더 -->
+        <div class="space-y-5 mb-6">
+          <!-- ① 주간 카페·디저트 줄이기 -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="sl-cafe" class="text-[13.5px] font-bold text-inkDark">☕ ① 주간 카페·디저트 줄이기</label>
+              <span class="text-xs font-extrabold text-brandBlue bg-brandBlueLight px-2.5 py-0.5 rounded-lg">
+                주 <span id="lbl-cafe">2</span>회 <span class="font-normal text-inkGray">(회당 <span id="unit-cafe">4,800</span>원)</span>
+              </span>
+            </div>
+            <input id="sl-cafe" type="range" min="0" max="7" step="1" value="2" class="fintech-slider" oninput="recalcSimulator(true)" />
+          </div>
+
+          <!-- ② 주간 배달·야식 줄이기 -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="sl-delivery" class="text-[13.5px] font-bold text-inkDark">🛵 ② 주간 배달·야식 줄이기</label>
+              <span class="text-xs font-extrabold text-brandBlue bg-brandBlueLight px-2.5 py-0.5 rounded-lg">
+                주 <span id="lbl-delivery">1</span>회 <span class="font-normal text-inkGray">(회당 <span id="unit-delivery">19,000</span>원)</span>
+              </span>
+            </div>
+            <input id="sl-delivery" type="range" min="0" max="6" step="1" value="1" class="fintech-slider" oninput="recalcSimulator(true)" />
+          </div>
+
+          <!-- ③ 월간 택시·충동쇼핑 줄이기 -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="sl-impulse" class="text-[13.5px] font-bold text-inkDark">🛍️ ③ 월간 택시·충동쇼핑 줄이기</label>
+              <span class="text-xs font-extrabold text-brandBlue bg-brandBlueLight px-2.5 py-0.5 rounded-lg">
+                월 <span id="lbl-impulse">2</span>회 <span class="font-normal text-inkGray">(회당 <span id="unit-impulse">25,000</span>원)</span>
+              </span>
+            </div>
+            <input id="sl-impulse" type="range" min="0" max="8" step="1" value="2" class="fintech-slider" oninput="recalcSimulator(true)" />
+          </div>
+
+          <!-- ④ 안 쓰는 OTT·멤버십·통신비 다이어트 -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="sl-fixed" class="text-[13.5px] font-bold text-inkDark">📱 ④ OTT·멤버십·통신비 다이어트</label>
+              <span class="text-xs font-extrabold text-brandMintDark bg-brandMintLight px-2.5 py-0.5 rounded-lg">
+                월 <span id="lbl-fixed">2</span>만 원 절감
+              </span>
+            </div>
+            <input id="sl-fixed" type="range" min="0" max="12" step="1" value="2" class="fintech-slider" oninput="recalcSimulator(true)" />
+          </div>
+
+          <!-- ⑤ 편의점·간식·소액결제 줄이기 -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="sl-micro" class="text-[13.5px] font-bold text-inkDark">🏪 ⑤ 주간 편의점·간식·소액결제 줄이기</label>
+              <span class="text-xs font-extrabold text-brandMintDark bg-brandMintLight px-2.5 py-0.5 rounded-lg">
+                주 <span id="lbl-micro">2</span>회 <span class="font-normal text-inkGray">(회당 <span id="unit-micro">5,500</span>원)</span>
+              </span>
+            </div>
+            <input id="sl-micro" type="range" min="0" max="7" step="1" value="2" class="fintech-slider" oninput="recalcSimulator(true)" />
+          </div>
+        </div>
+
+        <!-- 실시간 절약액 (월간 / 1년 / 3년 연 4% 복리) + 위시리스트 달성 프로그레스 -->
+        <div class="rounded-[22px] bg-gradient-to-br from-[#111827] to-[#1E293B] text-white p-5 shadow-lg">
+          <div class="grid grid-cols-2 gap-3 pb-3.5 mb-3.5 border-b border-white/10">
+            <div>
+              <p class="text-[11.5px] text-gray-300 mb-0.5">월간 예상 절약액</p>
+              <p class="text-[19px] font-extrabold text-brandMint">+ <span id="sim-monthly-out">0</span>원</p>
+            </div>
+            <div>
+              <p class="text-[11.5px] text-gray-300 mb-0.5">1년(12개월) 예상 절약액</p>
+              <p class="text-[19px] font-extrabold text-[#60A5FA]"><span id="sim-yearly-out">0</span>원</p>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-semibold text-gray-300">🌱 3년 적립 시 예상 모금액 (연 4% 복리 가정)</span>
+              <span class="text-[10.5px] font-bold text-brandMint bg-brandMint/15 px-2 py-0.5 rounded-full">세전 이자 포함</span>
+            </div>
+            <p class="text-[28px] sm:text-[32px] font-extrabold tracking-tight text-white leading-none">
+              <span id="sim-3yr-out" class="text-amber-300">0</span>원
+            </p>
+          </div>
+
+          <!-- 위시리스트 달성률 바 -->
+          <div class="bg-white/10 rounded-2xl p-3.5">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-white truncate pr-2">
+                🎯 <span id="wish-out-title">아이패드 에어</span> (<span id="wish-out-price">900,000</span>원)
+              </span>
+              <span id="wish-out-percent" class="font-extrabold text-brandMint shrink-0">1년 내 0%</span>
+            </div>
+            <div class="w-full h-2.5 bg-black/35 rounded-full overflow-hidden mb-2">
+              <div
+                id="wish-out-bar"
+                class="h-full bg-gradient-to-r from-brandBlue to-brandMint rounded-full transition-all duration-300"
+                style="width: 0%;"
+              ></div>
+            </div>
+            <p id="wish-out-eta" class="text-xs font-semibold text-gray-200">
+              예상 달성 소요 개월 수가 여기에 표시됩니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- [카드 7] 유형 & 취약점 맞춤 추천 솔루션 3선 + 모달 연결 -->
+      <div class="bg-white rounded-[26px] p-6 sm:p-7 shadow-fintech">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🚀</span>
+            <h3 class="text-[17px] font-extrabold text-inkDark">취약점 맞춤 추천 솔루션 TOP 3</h3>
+          </div>
+          <span class="text-[11px] font-bold text-brandBlue bg-brandBlueLight px-2.5 py-0.5 rounded-full">실행 가이드</span>
+        </div>
+        <p class="text-xs text-inkSub mb-4">나의 취약 소비 영역 TOP 2와 주 유형을 해결하는 실전 금융·생활 시스템입니다.</p>
+
+        <div id="solutions-list-container" class="space-y-3">
+          <!-- JS 동적 렌더링 -->
+        </div>
+      </div>
+
+      <!-- 하단 재진단 및 저장 기록 초기화 버튼 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 pb-8">
+        <button
+          type="button"
+          onclick="restartQuizKeepSegment()"
+          class="py-4 px-5 rounded-[18px] bg-brandBlue hover:bg-brandBlueDark text-white font-bold text-[14.5px] shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>처음부터 다시 진단하기</span>
+        </button>
+
+        <button
+          type="button"
+          onclick="resetAllSavedData()"
+          class="py-4 px-5 rounded-[18px] bg-white hover:bg-red-50 text-inkGray hover:text-red-600 font-bold text-[14.5px] border border-lineGray hover:border-red-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>저장 기록 완전 초기화</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       상세 실행 가이드 모달 팝업 (Modal)
+  ====================================================================== -->
+  <div
+    id="guide-modal"
+    class="hidden fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-4 modal-fade"
+    onclick="closeGuideModal(event)"
+  >
+    <div
+      class="bg-white w-full max-w-[460px] rounded-[26px] p-6 sm:p-7 shadow-2xl fade-slide-in"
+      onclick="event.stopPropagation()"
+    >
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div class="flex items-center gap-3">
+          <div id="modal-sol-icon" class="w-12 h-12 rounded-2xl bg-brandBlueLight flex items-center justify-center text-2xl shrink-0">
+            💡
+          </div>
+          <div>
+            <span id="modal-sol-tag" class="inline-block text-[11px] font-extrabold text-brandBlue bg-brandBlueLight px-2.5 py-0.5 rounded-full mb-1">
+              솔루션 태그
+            </span>
+            <h4 id="modal-sol-title" class="text-[18px] font-extrabold text-inkDark leading-snug">
+              솔루션 타이틀
+            </h4>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="closeGuideModal()"
+          class="w-8 h-8 rounded-full bg-appBg hover:bg-gray-200 text-inkGray flex items-center justify-center font-bold text-sm cursor-pointer"
+        >
+          ✕
+        </button>
+      </div>
+
+      <p id="modal-sol-desc" class="text-[13.5px] text-inkGray leading-relaxed mb-4">
+        솔루션 설명
+      </p>
+
+      <div class="bg-appBg rounded-2xl p-4 mb-5">
+        <p class="text-xs font-extrabold text-inkDark mb-3">✅ 오늘 바로 적용하는 3단계 실천 프로토콜</p>
+        <ul id="modal-sol-steps" class="space-y-2.5 text-[13px] text-inkDark font-medium">
+          <!-- JS 렌더링 -->
+        </ul>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5">
+        <button
+          type="button"
+          onclick="closeGuideModal()"
+          class="py-3.5 px-4 rounded-xl bg-appBg hover:bg-gray-200 text-inkGray font-bold text-sm transition-colors cursor-pointer"
+        >
+          닫기
+        </button>
+        <button
+          type="button"
+          onclick="confirmGuideRead()"
+          class="py-3.5 px-4 rounded-xl bg-brandBlue hover:bg-brandBlueDark text-white font-bold text-sm shadow-xs transition-colors cursor-pointer"
+        >
+          실천 가이드 숙지 완료!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 플로팅 토스트 알림 -->
+  <div
+    id="toast-bar"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-inkDark/95 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 translate-y-3 whitespace-nowrap"
+  >
+    <span class="w-5 h-5 rounded-full bg-brandMint text-inkDark flex items-center justify-center text-xs font-extrabold">✓</span>
+    <span id="toast-text">알림</span>
+  </div>
+
+  <!-- =====================================================================
+       JavaScript 정밀 소비 분석 엔진 & 인터랙션 로직
+  ====================================================================== -->
+  <script>
+    const STORAGE_KEY = 'moneycheck_precision_v3_state';
+
+    /**
+     * 6대 소비 역량 도메인 정의
+     */
+    const DOMAINS = [
+      { key: 'plan',    short: '예산 계획력',   tagLabel: '영역 1/6 · 예산·계획성',         leakTitle: '무계획 예산 운영 및 지출 흐름 방치' },
+      { key: 'impulse', short: '충동 통제력',   tagLabel: '영역 2/6 · 충동·감정소비 통제',   leakTitle: '스트레스·감정 기복에 따른 도파민 충동결제' },
+      { key: 'micro',   short: '소액지출 방어력', tagLabel: '영역 3/6 · 소액·반복 지출 관리', leakTitle: '카페·배달·편의점 등 습관성 소액 반복 누수' },
+      { key: 'fixed',   short: '고정비 관리력', tagLabel: '영역 4/6 · 고정비·구독 최적화',   leakTitle: '미사용 정기구독·통신비·할부 고정비 방치' },
+      { key: 'value',   short: '가성비 분별력', tagLabel: '영역 5/6 · 할인·가성비 분별력',   leakTitle: '세일·무료배송·1+1 행사에 흔들리는 착시 소비' },
+      { key: 'saving',  short: '저축 시스템',   tagLabel: '영역 6/6 · 저축·비상금 시스템',   leakTitle: '선저축 자동화 및 비상금 방어선 부재' }
+    ];
+
+    /**
+     * 세그먼트별 시뮬레이터 기준 단가 및 라벨 설정
+     */
+    const SEGMENT_META = {
+      student: {
+        name: '대학생 / 취준생',
+        short: '대학생/취준생',
+        badge: '대학생/취준생 기준',
+        simPill: '대학생 평균 단가',
+        units: { cafe: 4800, delivery: 19000, impulse: 25000, micro: 5500 }
+      },
+      worker: {
+        name: '직장인 / 프리랜서',
+        short: '직장인/프리랜서',
+        badge: '직장인/프리랜서 기준',
+        simPill: '직장인 평균 단가',
+        units: { cafe: 6000, delivery: 26000, impulse: 45000, micro: 7500 }
+      }
+    };
+
+    /**
+     * 12문항 × 5지선다 정밀 데이터셋 (점수: 100 / 75 / 50 / 25 / 0)
+     * 각 문항은 특정 도메인(domain)과 세부 누수 토픽명(topic)을 가짐
+     */
+    const QUIZ_BANK = {
+      student: [
+        // 1~2: plan (예산·계획성)
+        {
+          domain: 'plan',
+          topic: '월간 용돈·알바비 예산 수립',
+          q: '매달 용돈이나 아르바이트 급여가 들어왔을 때 한 달 예산 계획은 어떻게 세우나요?',
+          options: [
+            { score: 100, text: '식비·교통·여가·비상금 항목별로 주간 가용 금액까지 1만 원 단위로 쪼개어 관리한다' },
+            { score: 75,  text: '저축할 돈을 먼저 빼두고, 남은 생활비 총액 한도 안에서 대략적인 계획만 세워 쓴다' },
+            { score: 50,  text: '머릿속으로만 “이번 달엔 아껴야지” 다짐할 뿐 별도의 예산 배분 없이 사용한다' },
+            { score: 25,  text: '입금 직후 사고 싶던 것부터 결제하고, 월말 잔액이 2~3만 원 남으면 그때부터 버틴다' },
+            { score: 0,   text: '통장 잔고를 거의 확인하지 않으며 부족하면 후불결제·소액신용·추가 용돈에 의존한다' }
+          ]
+        },
+        {
+          domain: 'plan',
+          topic: '가계부 및 결제 내역 복기 습관',
+          q: '평소 내가 어디에 얼마를 썼는지 가계부 앱이나 카드 내역으로 점검하는 주기는?',
+          options: [
+            { score: 100, text: '가계부 앱 연동으로 매일 또는 주 1회 이상 카테고리별 지출 추이를 꼼꼼히 점검한다' },
+            { score: 75,  text: '주 1~2회 입출금 알림과 잔액을 확인하며 예산 초과 여부를 체크한다' },
+            { score: 50,  text: '한 달에 한 번, 카드 명세서나 월말 정산 알림이 올 때만 총액을 훑어본다' },
+            { score: 25,  text: '잔액 부족 알림이 뜰 때만 당황해서 최근 결제 내역을 뒤늦게 찾아본다' },
+            { score: 0,   text: '내역을 보면 스트레스받아서 아예 안 보거나 총지출이 얼마인지 전혀 모른다' }
+          ]
+        },
+        // 3~4: impulse (충동·감정소비 통제)
+        {
+          domain: 'impulse',
+          topic: '시험·과제 스트레스성 감정 소비',
+          q: '시험 기간, 취업 준비, 인간관계로 스트레스가 폭발한 날 나의 지갑 반응은?',
+          options: [
+            { score: 100, text: '산책·운동·수면 등 비용이 들지 않는 방법으로 기분을 전환하며 소비와 감정을 분리한다' },
+            { score: 75,  text: '미리 정해둔 소액 보상 한도(5천~1만 원 이내 디저트 등) 안에서만 기분을 낸다' },
+            { score: 50,  text: '월 1~2회 정도 기분 전환 겸 2~4만 원대 맛있는 음식이나 귀여운 소품을 즉흥 구매한다' },
+            { score: 25,  text: '“오늘 같은 날은 써도 돼!”라며 계획에 없던 옷·화장품·굿즈에 5~10만 원 이상 결제한다' },
+            { score: 0,   text: '새벽 감성이나 우울감이 올 때마다 쇼핑 앱을 켜서 장바구니 물건을 연달아 질러버린다' }
+          ]
+        },
+        {
+          domain: 'impulse',
+          topic: 'SNS 유행 아이템 & 장바구니 숙려 기간',
+          q: '인스타그램·유튜브에서 취향 저격 패션템이나 핫플 굿즈를 발견했을 때 결제까지 걸리는 시간은?',
+          options: [
+            { score: 100, text: '위시리스트에 적어두고 최소 3~7일 이상 고민하며 대체품이 집에 있는지 먼저 확인한다' },
+            { score: 75,  text: '장바구니에 담아두고 최소 하루(24시간) 자고 일어난 뒤에도 생각나면 구매한다' },
+            { score: 50,  text: '리뷰 몇 개만 빠르게 훑어보고 당일 저녁 안에 결제하는 편이다' },
+            { score: 25,  text: '품절 임박이나 인플루언서 공구 문구를 보면 10분 이내에 바로 간편결제를 누른다' },
+            { score: 0,   text: '보이자마자 홀린 듯 결제하고, 택배가 도착할 때쯤 내가 뭘 샀는지 기억나지 않을 때도 있다' }
+          ]
+        },
+        // 5~6: micro (소액·반복 지출 관리)
+        {
+          domain: 'micro',
+          topic: '캠퍼스·카공 카페 및 편의점 간식 빈도',
+          q: '일주일 기준 유료 카페 음료·디저트 및 편의점 간식에 지출하는 실제 빈도는?',
+          options: [
+            { score: 100, text: '텀블러·집 커피를 애용하며 유료 카페·편의점 간식은 주 1회 이하(주 5천 원 미만)로 쓴다' },
+            { score: 75,  text: '저가 커피 브랜드 위주로 주 2~3회 정도(주 1만 원 내외)만 계획적으로 소비한다' },
+            { score: 50,  text: '공강이나 모임 때마다 자연스럽게 주 4~5회(주 2만~2.5만 원 수준) 카페·편의점에 간다' },
+            { score: 25,  text: '하루 1잔 이상 프랜차이즈 음료 + 간식이 필수라 주 6~7회(주 3.5만 원 이상) 지출한다' },
+            { score: 0,   text: '하루 두 번 이상 카페·디저트·편의점 신상을 사 먹으며 한 달 20만 원 이상이 나간다' }
+          ]
+        },
+        {
+          domain: 'micro',
+          topic: '배달 앱 야식 및 택시 이용 습관',
+          q: '자취방·집에서 배달 음식을 시키거나 지각·귀찮음으로 택시를 타는 빈도는?',
+          options: [
+            { score: 100, text: '학식·집밥 위주로 해결하고 대중교통을 이용해 배달·택시는 월 1회 이하로 극히 드물다' },
+            { score: 75,  text: '정말 피곤한 날이나 친구들과 모일 때만 월 2~3회 정도 포장·배달을 이용한다' },
+            { score: 50,  text: '주 1~2회 정도 배달을 시키거나 늦잠 자는 날 종종 택시를 탄다 (월 8~12만 원 수준)' },
+            { score: 25,  text: '주 3~4회 배달 앱을 켜며 최소주문금액을 맞추려고 사이드 메뉴까지 항상 추가한다' },
+            { score: 0,   text: '거의 매일 배달로 끼니를 해결하고 짧은 거리도 습관적으로 택시를 타 지출이 가장 크다' }
+          ]
+        },
+        // 7~8: fixed (고정비·구독 최적화)
+        {
+          domain: 'fixed',
+          topic: 'OTT·음원·멤버십 정기구독 관리',
+          q: '현재 매달 자동결제 중인 OTT, 음악, 쇼핑 멤버십, 앱 구독 서비스 관리 상태는?',
+          options: [
+            { score: 100, text: '꼭 쓰는 1개 이하만 학생 할인·파티 공유로 유지하며 매월 정기결제 목록을 점검한다' },
+            { score: 75,  text: '실제 자주 쓰는 2개 내외만 구독 중이고 안 보는 달에는 즉시 일시정지·해지한다' },
+            { score: 50,  text: '3~4개 정도 구독 중인데 한 달에 한두 번만 켜는 서비스도 귀찮아서 그냥 두고 있다' },
+            { score: 25,  text: '무료 체험 해지일을 놓쳐 결제된 앱이 종종 있고 매달 구독료로 3~5만 원 이상 나간다' },
+            { score: 0,   text: '어떤 앱에서 얼마가 빠져나가는지 정확히 모른 채 수개월째 자동결제를 방치하고 있다' }
+          ]
+        },
+        {
+          domain: 'fixed',
+          topic: '통신 요금제 및 후불결제·할부 관리',
+          q: '스마트폰 통신 요금제와 소액결제·후불결제(BNPL)·할부 사용 패턴은 어떤가요?',
+          options: [
+            { score: 100, text: '1~2만 원대 알뜰폰/결합 요금제를 쓰며 후불결제·할부는 일절 사용하지 않는다' },
+            { score: 75,  text: '데이터 사용량에 맞는 적정 요금제를 쓰고 불가피한 고가 교재·장비 외엔 일시불만 쓴다' },
+            { score: 50,  text: '통신사 기본 요금제(5~6만 원대)를 그대로 쓰며 가끔 휴대폰 소액결제를 이용한다' },
+            { score: 25,  text: '데이터가 남는데도 고가 요금제를 방치 중이고 후불결제 한도를 자주 끌어다 쓴다' },
+            { score: 0,   text: '고액 통신비 + 휴대폰 소액결제 + 후불결제가 겹쳐 매달 고정 청구서가 감당하기 벅차다' }
+          ]
+        },
+        // 9~10: value (할인·가성비 분별력)
+        {
+          domain: 'value',
+          topic: '마감 세일·무료배송 기준 채우기 반응',
+          q: '쇼핑몰 타임세일이나 “8,000원만 더 담으면 무료배송!” 문구를 마주했을 때 행동은?',
+          options: [
+            { score: 100, text: '배송비 3,000원을 내더라도 불필요한 물건은 절대 추가하지 않으며 계획된 생필품만 산다' },
+            { score: 75,  text: '평소 꼭 쓰는 소모품(휴지·칫솔 등)이 있을 때만 묶음으로 채우고 없으면 배송비를 낸다' },
+            { score: 50,  text: '배송비가 아까워서 당장 안 급한 양말·간식·문구류를 장바구니에 끼워 넣곤 한다' },
+            { score: 25,  text: '50% 이상 세일이나 1+1 표시를 보면 원래 살 생각이 없던 품목도 “이득이다”라며 산다' },
+            { score: 0,   text: '할인 쿠폰 소멸 알림만 떠도 아까워서 억지로 쇼핑거리를 찾아 결제하는 편이다' }
+          ]
+        },
+        {
+          domain: 'value',
+          topic: '단위 가격 비교 및 중고·학생 혜택 활용',
+          q: '전공 서적, 전자기기, 생활용품을 구매할 때 가격 비교와 혜택 활용 수준은?',
+          options: [
+            { score: 100, text: '최저가·단위가격 비교는 기본이고 학생 복지몰·중고거래·도서관을 적극 활용해 아낀다' },
+            { score: 75,  text: '구매 전 주요 쇼핑몰 2~3곳의 가격과 쿠폰을 비교해 합리적인 가격에 구매한다' },
+            { score: 50,  text: '자주 쓰는 쇼핑 앱 한 곳에서만 대충 보고 바로 주문하는 편이다' },
+            { score: 25,  text: '귀찮아서 가격 비교 없이 눈에 보이는 첫 번째 링크나 오프라인 정가로 바로 산다' },
+            { score: 0,   text: '비싸더라도 예쁜 패키지나 빠른 배송·브랜드 감성이면 가격을 따지지 않고 결제한다' }
+          ]
+        },
+        // 11~12: saving (저축·비상금 시스템)
+        {
+          domain: 'saving',
+          topic: '선저축 비율 및 자동이체 시스템',
+          q: '한 달 총수입(용돈+알바비+장학금 등) 중 순수 저축·청약·적금으로 모으는 비율은?',
+          options: [
+            { score: 100, text: '수입 입금일 당일 40% 이상이 적금·청약·파킹통장으로 자동이체되도록 세팅해 두었다' },
+            { score: 75,  text: '매달 25~39% 수준을 꾸준히 먼저 떼어 저축 계좌로 옮겨 놓는다' },
+            { score: 50,  text: '생활비를 먼저 다 쓰고 월말에 돈이 남으면 10~20% 정도를 비정기적으로 저축한다' },
+            { score: 25,  text: '적금은 들어두었지만 생활비가 모자라 만기 전에 중도해지하거나 자주 빼서 쓴다' },
+            { score: 0,   text: '현재 저축 비율 0~5% 미만으로, 매달 들어온 돈을 남김없이 다 쓰기에 급급하다' }
+          ]
+        },
+        {
+          domain: 'saving',
+          topic: '비상금(예비자금) 계좌 분리 운영',
+          q: '갑작스러운 병원비, 경조사, 노트북 수리 등에 대비한 별도의 비상금 통장이 있나요?',
+          options: [
+            { score: 100, text: '최소 50~100만 원 이상의 비상금을 입출금 카드와 분리된 고금리 파킹통장에 보유 중이다' },
+            { score: 75,  text: '소액이지만 별도 세이프박스·비상금 칸에 20~50만 원 정도 예비자금을 모아두었다' },
+            { score: 50,  text: '따로 분리된 비상금 통장은 없고 그냥 주거래 생활비 통장에 섞여 있다' },
+            { score: 25,  text: '예비자금이 거의 없어 돌발 지출이 생기면 부모님께 손을 벌리거나 다음 달 돈을 당겨 쓴다' },
+            { score: 0,   text: '비상금은커녕 매달 말일마다 잔고 0원에 가까워 돌발 상황에 완전히 무방비 상태다' }
+          ]
+        }
+      ],
+
+      worker: [
+        // 1~2: plan
+        {
+          domain: 'plan',
+          topic: '월급날 통장 쪼개기 및 예산 배분',
+          q: '매달 급여(또는 프리랜서 정산금)가 입금된 직후 나의 자금 배분 프로세스는?',
+          options: [
+            { score: 100, text: '급여일 당일 저축·투자·고정비·변동생활비 4개 통장으로 자동 분배되어 예산이 완벽히 고정된다' },
+            { score: 75,  text: '저축과 고정비를 먼저 뺀 뒤 한 달 생활비 목표 한도를 정해두고 체크·신용카드를 쓴다' },
+            { score: 50,  text: '따로 통장을 쪼개진 않고 급여 통장 하나에서 카드값과 생활비가 모두 빠져나가게 둔다' },
+            { score: 25,  text: '카드 결제일에 대금 빠져나가고 나면 남는 돈이 적어 다시 신용카드로 한 달을 버틴다' },
+            { score: 0,   text: '월급이 스쳐 지나가며 매달 고정 지출과 변동 지출이 각각 얼마인지 파악조차 안 된다' }
+          ]
+        },
+        {
+          domain: 'plan',
+          topic: '자산·지출 트래킹 및 카드 명세서 점검',
+          q: '마이데이터·가계부 앱 등을 통해 월간 지출 내역과 순자산 흐름을 점검하는 빈도는?',
+          options: [
+            { score: 100, text: '매주 지출 리포트를 확인하고 매월 말 예산 대비 초과 항목을 분석해 다음 달 한도에 반영한다' },
+            { score: 75,  text: '주 1회 이상 카드 누적 사용액을 확인하며 월 목표 금액을 넘지 않도록 속도 조절을 한다' },
+            { score: 50,  text: '카드 결제일 며칠 전에 빠져나갈 총액 알림만 확인하고 세부 내역은 잘 보지 않는다' },
+            { score: 25,  text: '결제 예정 금액이 예상보다 너무 크게 찍혔을 때만 놀라서 명세서를 열어본다' },
+            { score: 0,   text: '여러 카드사와 계좌에 결제가 흩어져 있어 이번 달 총소비액을 전혀 모른 채 지낸다' }
+          ]
+        },
+        // 3~4: impulse
+        {
+          domain: 'impulse',
+          topic: '야근·업무 스트레스 보상 소비(시발비용)',
+          q: '야근이나 격무에 시달린 퇴근길, 나를 위로하기 위한 이른바 ‘보상 소비’ 패턴은?',
+          options: [
+            { score: 100, text: '운동·반신욕·취미 등 건강한 루틴으로 풀며 스트레스 때문에 충동 결제하는 일은 거의 없다' },
+            { score: 75,  text: '월간 리프레시 예산 한도 내에서만 소소한 맛있는 식사 정도로 기분 전환을 한다' },
+            { score: 50,  text: '주 1회 정도 퇴근길 택시 탑승이나 치맥·쇼핑 등으로 3~5만 원대 기분파 소비를 한다' },
+            { score: 25,  text: '“내가 돈 벌어서 뭐 해!”라며 계획 없던 백화점·패션·가젯·호캉스에 10~30만 원을 쓴다' },
+            { score: 0,   text: '스트레스받을 때마다 고가 명품·취미 장비·심야 쇼핑을 지르며 사후에 카드값을 후회한다' }
+          ]
+        },
+        {
+          domain: 'impulse',
+          topic: '고가 위시템 구매 전 숙려 원칙',
+          q: '10만 원 이상의 의류, 전자기기, 취미용품이 사고 싶어졌을 때 나의 결정 방식은?',
+          options: [
+            { score: 100, text: '최소 1주일 이상 숙려 기간을 거치고 기존 보유 물품과 예산 여유를 따진 뒤 일시불로만 산다' },
+            { score: 75,  text: '장바구니에 최소 2~3일 담아두고 비교 검토한 뒤 정말 필요할 때만 결제한다' },
+            { score: 50,  text: '후기와 유튜브 리뷰를 당일에 찾아보고 마음이 기울면 바로 구매 버튼을 누른다' },
+            { score: 25,  text: '인플루언서 추천이나 한정 수량 문구를 보면 고민 없이 즉시 간편결제로 지른다' },
+            { score: 0,   text: '당장 현금이 부족해도 무이자 할부 개월 수만 보고 30~100만 원대 물건을 충동 구매한다' }
+          ]
+        },
+        // 5~6: micro
+        {
+          domain: 'micro',
+          topic: '출근길·점심 직후 커피·디저트·편의점 지출',
+          q: '평일 출근길, 점심 식후 카페 음료·디저트 및 편의점 간식에 쓰는 주간 지출 패턴은?',
+          options: [
+            { score: 100, text: '사내 탕비실·텀블러를 적극 활용해 외부 유료 카페·간식 지출은 주 1회 이하로 방어한다' },
+            { score: 75,  text: '테이크아웃 저가 커피 위주로 주 2~3회(주 1만 원 내외)만 가볍게 소비한다' },
+            { score: 50,  text: '동료들과 매일 식후 커피를 마셔 주 5회(주 2.5만~3만 원 수준) 고정적으로 나간다' },
+            { score: 25,  text: '모닝커피 + 식후 프랜차이즈 음료·디저트 + 오후 간식까지 하루 1만 원 이상 매일 쓴다' },
+            { score: 0,   text: '스페셜티 카페·베이커리·편의점 들르기가 습관이라 다과비로만 월 25만 원 이상 쓴다' }
+          ]
+        },
+        {
+          domain: 'micro',
+          topic: '퇴근 후 배달·외식 및 출퇴근 택시비',
+          q: '평일 저녁·주말 배달 앱 주문과 늦잠·회식 후 택시 이용으로 나가는 빈도는?',
+          options: [
+            { score: 100, text: '밀프렙·집밥과 대중교통을 철저히 지켜 배달·택시는 월 1~2회 이하로 통제한다' },
+            { score: 75,  text: '주말 외식이나 불가피한 야근 시에만 제한적으로 이용해 월 10만 원 이내로 관리한다' },
+            { score: 50,  text: '주 2회 정도 배달을 시키고 한 달에 3~4번 택시를 타 월 15~25만 원 정도 지출한다' },
+            { score: 25,  text: '퇴근 후 요리할 기력이 없어 주 3~4회 이상 배달·간편외식을 하고 택시도 자주 탄다' },
+            { score: 0,   text: '거의 매일 배달·외식·택시를 이용하며 식비·교통비 변동지출이 월 60만 원을 훌쩍 넘는다' }
+          ]
+        },
+        // 7~8: fixed
+        {
+          domain: 'fixed',
+          topic: 'OTT·멤버십·정기구독 및 통신·보험 고정비',
+          q: '통신비, 보험료, 각종 OTT·쇼핑 멤버십·클라우드 등 매월 숨만 쉬어도 나가는 고정비 상태는?',
+          options: [
+            { score: 100, text: '알뜰폰·다이렉트 보험으로 다이어트를 마쳤고 구독도 꼭 쓰는 1~2개만 철저히 유지한다' },
+            { score: 75,  text: '분기마다 정기결제 내역을 점검해 안 쓰는 구독을 해지하며 적정 고정비를 유지 중이다' },
+            { score: 50,  text: '약정 끝난 6~8만 원대 통신요금제나 잘 안 보는 OTT 2~3개를 귀찮아서 그대로 두고 있다' },
+            { score: 25,  text: '쇼핑·배달 멤버십만 4개 이상이고 중복 보장 보험·통신비 등으로 매달 큰돈이 고정 유출된다' },
+            { score: 0,   text: '자동이체 항목이 너무 많아 총액 파악도 안 되며 미사용 유료 구독이 수개월째 방치되어 있다' }
+          ]
+        },
+        {
+          domain: 'fixed',
+          topic: '신용카드 할부 잔액 및 고정 결제 구조',
+          q: '현재 신용카드 할부(무이자 포함) 이용 습관과 매월 카드 고정 결제 부담 수준은?',
+          options: [
+            { score: 100, text: '체크카드 또는 신용카드 일시불만 사용하며 할부 잔액 0원 원칙을 철저히 지킨다' },
+            { score: 75,  text: '연 1~2회 꼭 필요한 대형 지출 외에는 할부를 쓰지 않아 다음 달 이월 부담이 거의 없다' },
+            { score: 50,  text: '2~3개월 무이자 할부가 항상 1~2건씩 걸려 있어 매달 기본 카드값이 깔려 있는 편이다' },
+            { score: 25,  text: '여러 건의 할부가 중첩되어 월급날마다 전월 할부금으로만 수십만 원이 먼저 빠져나간다' },
+            { score: 0,   text: '할부 누적으로 일시불 여력이 막혀 또 할부를 긁거나 리볼빙·현금서비스 유혹을 느낀다' }
+          ]
+        },
+        // 9~10: value
+        {
+          domain: 'value',
+          topic: '카드 실적·프로모션·무료배송 함정 대응',
+          q: '카드사 청구할인 실적 채우기나 온라인몰 특가·무료배송 조건 앞에서의 행동 패턴은?',
+          options: [
+            { score: 100, text: '실적이나 무료배송을 채우기 위한 억지 소비는 절대 안 하며 순수 피킹률만 냉정히 계산한다' },
+            { score: 75,  text: '원래 구매 예정이던 생필품 목록이 있을 때만 특가·묶음배송 혜택을 활용한다' },
+            { score: 50,  text: '전월 실적 구간이나 무료배송 금액이 조금 모자라면 당장 안 급한 물건을 더 담곤 한다' },
+            { score: 25,  text: '라이브커머스 특가나 대용량 묶음 할인을 보면 “싸게 샀다”며 필요 이상으로 쟁여두고 버린다' },
+            { score: 0,   text: '할인 쿠폰·멤버십 적립 혜택을 받으려고 오히려 평소보다 훨씬 많은 금액을 결제한다' }
+          ]
+        },
+        {
+          domain: 'value',
+          topic: '가심비 vs 실질 효용 가치 판단',
+          q: '물건이나 서비스를 구매할 때 브랜드 감성·편의성 대비 실질 사용 빈도(가성비)를 따지나요?',
+          options: [
+            { score: 100, text: '1회 사용당 비용(Cost per Use)과 대체 가능성을 꼼꼼히 따져 후회 없는 소비만 한다' },
+            { score: 75,  text: '주요 쇼핑몰 최저가와 실사용 후기를 비교해 가격 대비 만족도가 검증된 제품을 고른다' },
+            { score: 50,  text: '평소엔 비교하지만 피곤하거나 바쁠 땐 가격을 안 따지고 로켓·새벽배송으로 바로 시킨다' },
+            { score: 25,  text: '기능이 비슷해도 예쁜 디자인·유명 브랜드 프리미엄에 흔쾌히 웃돈을 지불하는 편이다' },
+            { score: 0,   text: '비싸게 주고 산 뒤 한두 번 쓰고 방치된 운동기구·옷·주방용품이 집안에 가득하다' }
+          ]
+        },
+        // 11~12: saving
+        {
+          domain: 'saving',
+          topic: '월 실수령액 대비 선저축·투자 비율',
+          q: '세후 월 평균 수입 중 순수 저축·투자(적금, 연금저축/IRP, ETF 등)로 적립하는 비율은?',
+          options: [
+            { score: 100, text: '실수령액의 50% 이상을 급여일 자동이체로 저축·투자 계좌에 흔들림 없이 적립한다' },
+            { score: 75,  text: '실수령액의 35~49% 수준을 목표 시드머니 계획에 맞춰 매달 꾸준히 모으고 있다' },
+            { score: 50,  text: '실수령액의 20~34% 정도 저축하지만 경조사나 여행이 있는 달엔 저축액이 크게 줄어든다' },
+            { score: 25,  text: '실수령액의 10~19% 미만으로, 남는 돈을 모으려다 보니 매달 저축액이 들쭉날쭉하다' },
+            { score: 0,   text: '저축률 10% 미만(또는 0%)으로 소득 증가 속도보다 소비 증가 속도가 빨라 돈이 안 모인다' }
+          ]
+        },
+        {
+          domain: 'saving',
+          topic: '생활비 3개월 치 비상금 방어 시스템',
+          q: '이직 공백기, 건강 문제, 급전 필요 상황에 대비한 유동성 비상금(파킹통장·CMA) 준비 수준은?',
+          options: [
+            { score: 100, text: '최소 3~6개월 치 필수 생활비 이상의 비상금이 별도 파킹통장·CMA에 안전하게 분리되어 있다' },
+            { score: 75,  text: '1~2개월 치 생활비 수준의 비상금을 별도 계좌에 모아두었고 조금씩 늘려가는 중이다' },
+            { score: 50,  text: '비상금 전용 통장은 따로 없지만 급할 때 깰 수 있는 소액 예·적금 정도만 있다' },
+            { score: 25,  text: '돌발 지출이 발생하면 정기적금을 깨거나 신용카드 할부·마이너스통장으로 메꾼다' },
+            { score: 0,   text: '여유 현금이 전혀 없어 한 달만 소득이 끊기거나 큰 지출이 생겨도 즉시 자금 경색이 온다' }
+          ]
+        }
+      ]
+    };
+
+    /**
+     * 6가지 정밀 소비 유형 정의
+     */
+    const PRECISION_TYPES = {
+      T1: {
+        id: 'T1',
+        shortName: '욜로 플렉서',
+        subPhrase: '도파민·감정 보상 기질이 더해진',
+        title: '도파민 추구형 욜로 플렉서',
+        badge: '유형 01 · 감정·충동 지출 중심',
+        badgeStyle: 'bg-[#FFF1F2] text-[#E11D48]',
+        emoji: '🔥',
+        shareRatio: '전체 정밀 진단 참여자의 약 16%가 이 유형이에요',
+        desc: '현재의 기분 전환과 자기 보상, 강렬한 경험 가치를 최우선으로 여기는 타입입니다. 평소에는 괜찮다가도 스트레스나 SNS 유혹이 찾아오면 예산 브레이크가 풀리며 굵직한 결제로 이어지기 쉽습니다. 의지력 대신 물리적인 결제 지연 장치(장바구니 숙려제·선저축 분리)만 걸어두면 자산이 가장 빠르게 반등합니다.',
+        bestMatch: {
+          name: '💎 빈틈없는 시스템 짠테크 마스터',
+          desc: '감정적 과소비 순간에 냉철한 브레이크를 걸어주고 자산 배분 루틴을 만들어주는 최고의 재무 파트너'
+        },
+        worstMatch: {
+          name: '🔥 도파민 추구형 욜로 플렉서',
+          desc: '“오늘 고생했는데 질러!” 서로의 플렉스를 응원하다 함께 카드 명세서 폭탄을 맞이하는 조합'
+        }
+      },
+      T2: {
+        id: 'T2',
+        shortName: '소확행 수집가',
+        subPhrase: '습관성 소액 지출 기질이 섞인',
+        title: '가랑비에 옷 젖는 소확행 수집가',
+        badge: '유형 02 · 배달·카페·소액 반복 중심',
+        badgeStyle: 'bg-[#EFF6FF] text-[#2563EB]',
+        emoji: '☕',
+        shareRatio: '전체 정밀 진단 참여자의 약 27%로 가장 흔한 유형이에요',
+        desc: '명품이나 고가 할부 같은 큰 사치는 잘 부리지 않지만, 매일 반복되는 커피·디저트·배달팁·편의점·택시비 등 5천~2만 원대 소액 결제에서 지갑 구멍이 뚫려 있는 유형입니다. 건당 금액이 작아 죄책감이 적지만 1년 누적 유출액은 수백만 원에 달합니다. 주간 변동비 전용 체크카드 한도 설정이 특효약입니다.',
+        bestMatch: {
+          name: '⚖️ 밸런스 잡힌 스마트 실속파',
+          desc: '일상의 즐거움은 유지하면서도 불필요한 배달·카페 빈도를 자연스럽게 줄여주는 현실적 메이트'
+        },
+        worstMatch: {
+          name: '☕ 가랑비에 옷 젖는 소확행 수집가',
+          desc: '만날 때마다 “밥 먹고 2차 디저트 카페 가고 택시 타자!”며 티끌 모아 탕진을 완성하는 조합'
+        }
+      },
+      T3: {
+        id: 'T3',
+        shortName: '고정비 누수형',
+        subPhrase: '정기구독·할부 방치 성향이 섞인',
+        title: '숨만 쉬어도 빠져나가는 고정비 누수형',
+        badge: '유형 03 · 구독·통신·할부 방치 중심',
+        badgeStyle: 'bg-[#F5F3FF] text-[#7C3AED]',
+        emoji: '💧',
+        shareRatio: '전체 정밀 진단 참여자의 약 18%가 이 유형이에요',
+        desc: '일상에서 돈을 헤프게 쓰는 것 같지 않은데도 통장에 돈이 안 모인다면 범인은 자동이체와 할부입니다. 잘 안 보는 OTT·멤버십, 비싼 통신 요금제, 무이자 할부 잔액이 매달 가용 소득을 먼저 갉아먹고 있습니다. 단 하루 날을 잡아 고정비 구조조정만 실행해도 고통 없이 매달 현금흐름이 살아납니다.',
+        bestMatch: {
+          name: '💎 빈틈없는 시스템 짠테크 마스터',
+          desc: '숨어 있는 자동결제와 고비용 요금제를 단숨에 정리해 고정비를 절반으로 줄여주는 구원투수'
+        },
+        worstMatch: {
+          name: '🏷️ 할인에 약한 가성비 착시 쇼퍼',
+          desc: '멤버십 혜택과 무이자 할부 프로모션에 함께 설득당해 매달 고정 청구액을 더 불려버리는 조합'
+        }
+      },
+      T4: {
+        id: 'T4',
+        shortName: '가성비 착시 쇼퍼',
+        subPhrase: '세일·프로모션 유혹에 약한',
+        title: '할인에 약한 가성비 착시 쇼퍼',
+        badge: '유형 04 · 세일·1+1·무료배송 착시 중심',
+        badgeStyle: 'bg-[#FFFBEB] text-[#D97706]',
+        emoji: '🏷️',
+        shareRatio: '전체 정밀 진단 참여자의 약 14%가 이 유형이에요',
+        desc: '합리적인 소비를 추구한다고 생각하지만 실제로는 ‘50% 마감 특가’, ‘1+1 행사’, ‘무료배송 금액 채우기’, ‘카드 전월 실적 채우기’에 설득당해 계획에 없던 지출을 늘리는 유형입니다. 얼마나 싸게 샀는지가 아니라 ‘안 사면 100% 할인’이라는 기준점 전환이 필요합니다.',
+        bestMatch: {
+          name: '⚖️ 밸런스 잡힌 스마트 실속파',
+          desc: '진짜 필요한 소비인지, 단순히 할인율 때문에 사는 것인지 객관적으로 짚어주는 든든한 조언자'
+        },
+        worstMatch: {
+          name: '🔥 도파민 추구형 욜로 플렉서',
+          desc: '“지금 세일인데 무조건 사야지!”라며 서로의 합리화를 부추겨 택배 상자를 쌓아 올리는 조합'
+        }
+      },
+      T5: {
+        id: 'T5',
+        shortName: '스마트 실속파',
+        subPhrase: '안정적인 균형 감각을 갖춘',
+        title: '밸런스 잡힌 스마트 실속파',
+        badge: '유형 05 · 올라운드 양호 · 부분 약점 보완형',
+        badgeStyle: 'bg-[#ECFEFF] text-[#0891B2]',
+        emoji: '⚖️',
+        shareRatio: '전체 정밀 진단 참여자의 약 15%가 이 유형이에요',
+        desc: '극단적인 과소비나 치명적인 재무 누수 없이 삶의 만족도와 저축 사이에서 건강한 균형을 유지하고 있는 상위권 소비자입니다. 다만 바쁜 일상 속에서 한두 가지 취약 영역(소액 외식비나 미처 못 챙긴 구독·예산 복기 등)만 정밀하게 다듬으면 곧바로 상위 10% 마스터 단계로 도약할 수 있습니다.',
+        bestMatch: {
+          name: '💎 빈틈없는 시스템 짠테크 마스터',
+          desc: '남아 있는 2% 아쉬운 지출 구멍을 메우고 저축·투자 수익률까지 한 단계 끌어올려 주는 시너지 메이트'
+        },
+        worstMatch: {
+          name: '🔥 도파민 추구형 욜로 플렉서',
+          desc: '모처럼 잡아둔 주간 예산 밸런스가 상대방의 즉흥적인 핫플·쇼핑 제안에 자주 흔들릴 수 있는 조합'
+        }
+      },
+      T6: {
+        id: 'T6',
+        shortName: '시스템 짠테크 마스터',
+        subPhrase: '자동화 자산 관리가 내재화된',
+        title: '빈틈없는 시스템 짠테크 마스터',
+        badge: '유형 06 · 선저축·예산·고정비 최적화 완성형',
+        badgeStyle: 'bg-[#ECFDF5] text-[#059669]',
+        emoji: '💎',
+        shareRatio: '전체 정밀 진단 참여자 중 상위 10% 이내의 완성형이에요',
+        desc: '의지력에 기대지 않고 선저축 자동이체, 통장 쪼개기, 고정비 최적화, 비상금 방어선까지 시스템으로 구축한 최상위 재테크 고수입니다. 불필요한 감정 소비와 착시 할인을 정확히 걸러내며, 이제는 단순 절약을 넘어 목적 자금별 복리 운용과 소비 번아웃 방지에 집중할 단계입니다.',
+        bestMatch: {
+          name: '⚖️ 밸런스 잡힌 스마트 실속파',
+          desc: '가치관 충돌 없이 미래 자산 목표를 함께 설계하면서도 기분 좋은 여가 밸런스를 나누는 최고의 파트너'
+        },
+        worstMatch: {
+          name: '💧 숨만 쉬어도 빠져나가는 고정비 누수형',
+          desc: '방치된 구독료와 무이자 할부 내역을 볼 때마다 답답함에 잔소리가 멈추지 않게 되는 극과 극 조합'
+        }
+      }
+    };
+
+    /**
+     * 도메인별 동적 맞춤 미션 풀 (각 영역별 대표 실천 미션 2개)
+     */
+    const DOMAIN_MISSIONS = {
+      plan: [
+        '급여/용돈 입금일 기준 저축·고정비·생활비 통장을 분리하고 주간 가용 생활비 한도 확정하기',
+        '매주 일요일 밤 5분간 가계부 앱을 열어 이번 주 초과 지출 카테고리 1개만 피드백하기'
+      ],
+      impulse: [
+        '5만 원 이상 비계획 상품은 결제 전 반드시 ‘48시간 장바구니 숙려제’ 거치기',
+        '쇼핑 앱 마케팅 푸시 알림을 모두 끄고 스트레스 해소용 무지출 대체 루틴 2가지 적어두기'
+      ],
+      micro: [
+        '주간 카페·배달·편의점 전용 체크카드에 일주일 예산(예: 4~5만 원)만 충전해 한도 내로 쓰기',
+        '배달 앱 주문 전 포장 할인/집 간편식을 먼저 확인하고 평일 텀블러 사용으로 주 3회 커피값 방어하기'
+      ],
+      fixed: [
+        '오늘 바로 앱스토어·카드사 정기결제 목록을 열어 최근 2주간 안 쓴 OTT·멤버십 즉시 해지하기',
+        '약정 끝난 통신 요금제를 알뜰폰/결합 요금제로 비교 전환하고 신규 무이자 할부 3개월간 봉인하기'
+      ],
+      value: [
+        '무료배송 기준이나 카드 실적을 채우기 위한 끼워 넣기 구매 금지(차라리 배송비 3천 원 내기)',
+        '1+1·마감 세일 발견 시 “정가였어도 오늘 내 돈 주고 샀을까?” 3초 자문 후 결제하기'
+      ],
+      saving: [
+        '수입 입금 당일 오전 자동이체로 최소 25~40%가 선저축 계좌로 먼저 빠져나가게 세팅하기',
+        '체크카드가 연결되지 않은 고금리 파킹통장/CMA를 개설해 최소 1~3개월 치 비상금 분리 보관하기'
+      ]
+    };
+
+    /**
+     * 도메인별 상세 실행 솔루션 가이드 라이브러리 (모달 팝업 연동)
+     */
+    const DOMAIN_SOLUTIONS = {
+      plan: {
+        icon: '🗂️',
+        tag: '예산·통장 시스템화',
+        title: '자동 통장 쪼개기 & 주간 예산 봉투 시스템',
+        desc: '월 단위로 예산을 잡으면 월초에 과소비하고 월말에 굶게 됩니다. 통장을 역할별로 분리하고 변동 생활비를 주 단위로 쪼개는 것이 핵심입니다.',
+        steps: [
+          '급여/용돈 통장(수입) → 고정비 통장(자동이체 전용) → 변동생활비 체크카드 → 비상금 파킹통장 4단계 흐름을 만듭니다.',
+          '한 달 변동 생활비가 40만 원이라면 한 번에 넣지 않고 매주 월요일 10만 원씩 자동이체되도록 설정합니다.',
+          '매주 일요일 밤 잔액이 남으면 비상금 통장으로 이체해 소소한 성취 보상을 만듭니다.'
+        ]
+      },
+      impulse: {
+        icon: '🛡️',
+        tag: '도파민·충동 브레이크',
+        title: '48시간 장바구니 냉각기 & 원클릭 결제 해제법',
+        desc: '충동구매의 80%는 결제 과정이 너무 쉽고 빠르기 때문에 일어납니다. 결제 마찰력을 의도적으로 높여 뇌의 도파민 흥분을 가라앉히세요.',
+        steps: [
+          '자주 쓰는 패션·쇼핑몰 앱의 마케팅 야간 푸시 알림을 즉시 OFF 처리합니다.',
+          '간편결제 원클릭 비밀번호 대신 일반 결제 방식을 두어 결제 직전 10초 생각할 틈을 만듭니다.',
+          '사고 싶은 아이템은 캡처 후 ‘위시 메모장’에 가격과 이유를 적고 48시간 뒤에도 필요하면 구매합니다.'
+        ]
+      },
+      micro: {
+        icon: '☕',
+        tag: '소액 반복 누수 차단',
+        title: '카페·배달·편의점 주간 총량제 체크카드 전략',
+        desc: '건당 5천~2만 원 지출은 가계부를 일일이 쓰기보다 전용 선불/체크카드 한 장으로 총량만 통제할 때 스트레스가 가장 적고 효과가 확실합니다.',
+        steps: [
+          '카페·배달·편의점 결제에만 사용하는 전용 체크카드(또는 페이 머니) 1개를 지정합니다.',
+          '이번 주 허용 횟수(예: 카페 2회 + 배달 1회 = 주 3만 원)만큼만 월요일 아침에 충전합니다.',
+          '배달 앱 최소주문금액을 맞추기 위한 사이드 추가 대신 동네 포장 픽업이나 냉동 간편식을 적극 활용합니다.'
+        ]
+      },
+      fixed: {
+        icon: '✂️',
+        tag: '고정비 구조조정',
+        title: '30분 컷 숨은 정기구독 정리 & 알뜰폰·무할부 프로토콜',
+        desc: '변동비를 매일 참는 것보다 고정비 5만 원을 한 번 깎는 것이 1년 60만 원 확정 수익을 만드는 가장 쉬운 재테크입니다.',
+        steps: [
+          '스마트폰 설정 > 구독 메뉴 및 카드사 앱 ‘정기결제 관리’에 들어가 사용 빈도가 월 2회 미만인 구독을 해지합니다.',
+          '통신사 약정이 끝났다면 동일 통신망 알뜰폰 유심 요금제(월 1~2만 원대)로 번호이동해 매달 3~4만 원을 절감합니다.',
+          '기존 할부 잔액부터 우선 상환하고 앞으로 3개월간 ‘무이자 할부 금지’ 원칙을 적용해 다음 달 월급을 지킵니다.'
+        ]
+      },
+      value: {
+        icon: '⚖️',
+        tag: '할인 착시 디톡스',
+        title: '1+1·무료배송 함정 탈출 & 1회 사용 비용 계산법',
+        desc: '할인율 숫자에 현혹되면 집에 안 쓰는 재고만 쌓입니다. 지출 총액과 실제 사용 횟수 기준으로 소비 판단 공식을 바꾸세요.',
+        steps: [
+          '무료배송까지 7,000원이 부족할 때 불필요한 상품을 담는 대신 3,000원 배송비를 내어 4,000원을 아낍니다.',
+          '카드 전월 실적을 채우려고 월말에 억지 쇼핑을 하고 있다면 무실적 혜택 카드나 체크카드로 리모델링합니다.',
+          '구매 전 “이 물건을 최소 20번 이상 쓸 것인가?” 자문해 1회당 사용 비용이 합리적인지 점검합니다.'
+        ]
+      },
+      saving: {
+        icon: '🏦',
+        tag: '선저축·비상금 자동화',
+        title: '급여일 +1일 강제 선저축 & 고금리 파킹통장 방어선',
+        desc: '쓰고 남은 돈을 저축하면 평생 돈이 모이지 않습니다. 저축을 가장 먼저 빠져나가는 ‘나에게 내는 세금’으로 자동화하세요.',
+        steps: [
+          '적금·투자 자동이체일을 급여/용돈 입금일 당일 또는 익일 오전에 배치해 생활비와 원천 분리합니다.',
+          '입출금 카드가 없는 고금리 파킹통장(또는 증권사 CMA)을 만들어 월 필수 생활비 3개월 치 비상금을 모읍니다.',
+          '경조사·병원비 등 비정기 지출은 적금을 깨지 않고 이 비상금 통장에서만 꺼내 쓴 뒤 다음 달에 채워 넣습니다.'
+        ]
+      }
+    };
+
+    /**
+     * 애플리케이션 상태 (LocalStorage 완벽 저장·복원)
+     */
+    let state = {
+      segment: 'student',               // 'student' | 'worker'
+      completed: false,                 // 12문항 완료 여부
+      answers: new Array(12).fill(null),// 각 문항별 선택한 옵션 인덱스 (0~4)
+      missionsChecked: [false, false, false, false],
+      sliders: {
+        cafe: 2,
+        delivery: 1,
+        impulse: 2,
+        fixed: 2,
+        micro: 2
+      },
+      wishlist: {
+        title: '아이패드 에어',
+        amount: 900000
+      },
+      lastAnalysis: null                // 계산된 정밀 분석 결과 캐시
+    };
+
+    let currentStep = 0; // 0 ~ 11
+    let activeSolutionsList = [];
+
+    // DOM 참조
+    const startViewEl = document.getElementById('start-view');
+    const quizViewEl = document.getElementById('quiz-view');
+    const resultViewEl = document.getElementById('result-view');
+
+    /**
+     * 초기 로드 시 LocalStorage 상태 복원
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromStorage();
+    });
+
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          selectSegment('student', false);
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          state = {
+            ...state,
+            ...parsed,
+            sliders: { ...state.sliders, ...(parsed.sliders || {}) },
+            wishlist: { ...state.wishlist, ...(parsed.wishlist || {}) }
+          };
+          selectSegment(state.segment || 'student', false);
+
+          if (state.completed && Array.isArray(state.answers) && state.answers.every((v) => v !== null)) {
+            const analysis = runPrecisionEngine(state.segment, state.answers);
+            state.lastAnalysis = analysis;
+            const pType = PRECISION_TYPES[analysis.primaryTypeKey];
+            document.getElementById('resume-banner-text').textContent =
+              `${pType.emoji} ${pType.title} · 종합 ${analysis.totalScore}점`;
+            document.getElementById('resume-banner').classList.remove('hidden');
+            showAutosavePill();
+          }
+        }
+      } catch (err) {
+        selectSegment('student', false);
+      }
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        showAutosavePill();
+      } catch (err) {
+        // 스토리지 제한 환경 예외 안전 무시
+      }
+    }
+
+    function showAutosavePill() {
+      const el = document.getElementById('autosave-indicator');
+      el.classList.remove('hidden');
+      el.classList.add('inline-flex');
+    }
+
+    /**
+     * 시작 화면 세그먼트(대학생/직장인) 선택
+     */
+    function selectSegment(seg, shouldSave = true) {
+      state.segment = seg;
+
+      const sBtn = document.getElementById('seg-student-btn');
+      const wBtn = document.getElementById('seg-worker-btn');
+      const sChk = document.getElementById('seg-student-check');
+      const wChk = document.getElementById('seg-worker-check');
+      const ctaTxt = document.getElementById('start-cta-text');
+
+      if (seg === 'student') {
+        sBtn.className = 'text-left p-4 rounded-[20px] border-2 border-brandBlue bg-brandBlueLight/60 transition-all cursor-pointer relative';
+        sChk.className = 'w-5 h-5 rounded-full bg-brandBlue text-white text-xs font-bold flex items-center justify-center';
+        sChk.textContent = '✓';
+
+        wBtn.className = 'text-left p-4 rounded-[20px] border-2 border-lineGray bg-white hover:border-brandBlue/40 transition-all cursor-pointer relative';
+        wChk.className = 'w-5 h-5 rounded-full bg-appBg text-inkSub text-xs font-bold flex items-center justify-center';
+        wChk.textContent = '2';
+
+        ctaTxt.textContent = '대학생/취준생 12문항 정밀 진단 시작하기';
+      } else {
+        wBtn.className = 'text-left p-4 rounded-[20px] border-2 border-brandBlue bg-brandBlueLight/60 transition-all cursor-pointer relative';
+        wChk.className = 'w-5 h-5 rounded-full bg-brandBlue text-white text-xs font-bold flex items-center justify-center';
+        wChk.textContent = '✓';
+
+        sBtn.className = 'text-left p-4 rounded-[20px] border-2 border-lineGray bg-white hover:border-brandBlue/40 transition-all cursor-pointer relative';
+        sChk.className = 'w-5 h-5 rounded-full bg-appBg text-inkSub text-xs font-bold flex items-center justify-center';
+        sChk.textContent = '1';
+
+        ctaTxt.textContent = '직장인/프리랜서 12문항 정밀 진단 시작하기';
+      }
+
+      if (shouldSave) saveToStorage();
+    }
+
+    /**
+     * 이어보기 배너 클릭 시 저장된 정밀 리포트 즉시 복원
+     */
+    function restoreSavedReport() {
+      if (!state.completed) return;
+      const analysis = runPrecisionEngine(state.segment, state.answers);
+      state.lastAnalysis = analysis;
+
+      startViewEl.classList.add('hidden');
+      quizViewEl.classList.add('hidden');
+      resultViewEl.classList.remove('hidden');
+
+      renderPrecisionResult(analysis, true);
+      showToast('저장된 정밀 진단 리포트를 불러왔습니다!');
+    }
+
+    /**
+     * 12문항 정밀 테스트 시작
+     */
+    function startPrecisionQuiz() {
+      currentStep = 0;
+      state.answers = new Array(12).fill(null);
+      state.completed = false;
+
+      document.getElementById('quiz-mode-pill').textContent = SEGMENT_META[state.segment].short;
+
+      startViewEl.classList.add('hidden');
+      resultViewEl.classList.add('hidden');
+      quizViewEl.classList.remove('hidden');
+
+      renderQuizStep();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * 현재 문항(1~12) 및 5지선다 렌더링 (이전 선택지 하이라이트 완벽 지원)
+     */
+    function renderQuizStep() {
+      const bank = QUIZ_BANK[state.segment];
+      const item = bank[currentStep];
+      const domainMeta = DOMAINS.find((d) => d.key === item.domain);
+
+      document.getElementById('quiz-step-num').textContent = currentStep + 1;
+      const pct = ((currentStep + 1) / 12) * 100;
+      document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+      const prevBtn = document.getElementById('quiz-prev-btn');
+      prevBtn.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+
+      const cardBody = document.getElementById('quiz-card-body');
+      cardBody.classList.remove('fade-slide-in');
+      void cardBody.offsetWidth;
+      cardBody.classList.add('fade-slide-in');
+
+      document.getElementById('quiz-domain-tag').textContent = domainMeta.tagLabel;
+      document.getElementById('quiz-question-title').textContent = `Q${currentStep + 1}. ${item.q}`;
+
+      const listEl = document.getElementById('quiz-options-list');
+      listEl.innerHTML = '';
+
+      const levelBadges = ['매우 체계적', '양호한 편', '보통 수준', '주의 필요', '위험 누수'];
+
+      item.options.forEach((opt, idx) => {
+        const isSelected = state.answers[currentStep] === idx;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `w-full text-left p-3.5 sm:p-4 rounded-[18px] border-2 transition-all duration-150 flex items-start justify-between gap-3 cursor-pointer ${
+          isSelected
+            ? 'border-brandBlue bg-brandBlueLight/80 text-brandBlueDark font-bold shadow-2xs'
+            : 'border-lineGray bg-white hover:border-brandBlue/45 hover:bg-appBg/60 text-inkDark font-medium'
+        }`;
+
+        btn.innerHTML = `
+          <div class="space-y-1 pr-1">
+            <span class="inline-block text-[10.5px] font-extrabold px-2 py-0.5 rounded-md ${
+              isSelected ? 'bg-brandBlue text-white' : 'bg-appBg text-inkSub'
+            }">
+              단계 ${idx + 1} · ${levelBadges[idx]}
+            </span>
+            <p class="text-[14px] sm:text-[14.5px] leading-snug">${opt.text}</p>
+          </div>
+          <span class="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-extrabold mt-0.5 ${
+            isSelected ? 'bg-brandBlue text-white' : 'bg-appBg text-inkSub'
+          }">
+            ${isSelected ? '✓' : idx + 1}
+          </span>
+        `;
+
+        btn.onclick = () => handleOptionSelect(idx);
+        listEl.appendChild(btn);
+      });
+    }
+
+    function handleOptionSelect(optIndex) {
+      state.answers[currentStep] = optIndex;
+      saveToStorage();
+      renderQuizStep();
+
+      setTimeout(() => {
+        if (currentStep < 11) {
+          currentStep++;
+          renderQuizStep();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          finalizeQuizAndAnalyze();
+        }
+      }, 220);
+    }
+
+    function goPrevQuestion() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderQuizStep();
+      }
+    }
+
+    /**
+     * 12문항 완료 시 다차원 결과 도출 및 초기 슬라이더 세팅
+     */
+    function finalizeQuizAndAnalyze() {
+      const analysis = runPrecisionEngine(state.segment, state.answers);
+      state.completed = true;
+      state.lastAnalysis = analysis;
+      state.missionsChecked = [false, false, false, false];
+
+      // 사용자의 실제 응답 심각도에 비례하여 5종 절약 슬라이더 초기값 현실적 세팅
+      state.sliders = deriveInitialSlidersFromAnswers(state.answers, analysis.domainScores);
+      saveToStorage();
+
+      quizViewEl.classList.add('hidden');
+      resultViewEl.classList.remove('hidden');
+
+      renderPrecisionResult(analysis, false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * =====================================================================
+     * 3. 다차원 데이터 기반 정밀 결과 도출 알고리즘 (Result Engine)
+     * =====================================================================
+     */
+    function runPrecisionEngine(segment, answersArr) {
+      const bank = QUIZ_BANK[segment];
+      const domainRaw = {
+        plan: [],
+        impulse: [],
+        micro: [],
+        fixed: [],
+        value: [],
+        saving: []
+      };
+
+      const itemRecords = [];
+
+      answersArr.forEach((ansIdx, qIdx) => {
+        const safeIdx = ansIdx !== null && ansIdx >= 0 && ansIdx <= 4 ? ansIdx : 2;
+        const qObj = bank[qIdx];
+        const chosenOpt = qObj.options[safeIdx];
+        domainRaw[qObj.domain].push(chosenOpt.score);
+
+        itemRecords.push({
+          qIndex: qIdx + 1,
+          domain: qObj.domain,
+          topic: qObj.topic,
+          question: qObj.q,
+          selectedIndex: safeIdx,
+          selectedText: chosenOpt.text,
+          score: chosenOpt.score
+        });
+      });
+
+      // b) 6대 소비 역량 세부 점수 (각 0~100점)
+      const domainScores = {};
+      let sumDomains = 0;
+      DOMAINS.forEach((d) => {
+        const arr = domainRaw[d.key];
+        const avg = Math.round((arr[0] + arr[1]) / 2);
+        domainScores[d.key] = avg;
+        sumDomains += avg;
+      });
+
+      // a) 종합 소비 건강 점수 (0~100점) 및 상위 퍼센트 추정치 도출
+      const totalScore = Math.round(sumDomains / 6);
+      const topPercentile = estimateTopPercentile(totalScore);
+
+      // c) 세부 점수 결핍도(Deficit = 100 - 점수)와 가중치를 분석해 주 유형 & 부 성향 도출
+      const deficits = {
+        impulse: 100 - domainScores.impulse,
+        micro:   100 - domainScores.micro,
+        fixed:   100 - domainScores.fixed,
+        value:   100 - domainScores.value,
+        plan:    100 - domainScores.plan,
+        saving:  100 - domainScores.saving
+      };
+
+      // T1~T4 특화 결핍 지수 계산 (주 원인 도메인과 보조 연관 도메인 가중 결합)
+      const riskScores = [
+        { typeKey: 'T1', label: '도파민·충동 소비 기질', score: deficits.impulse * 1.18 + deficits.plan * 0.25 + deficits.saving * 0.15 },
+        { typeKey: 'T2', label: '소확행 소액누수 기질',   score: deficits.micro * 1.18   + deficits.plan * 0.22 + deficits.impulse * 0.12 },
+        { typeKey: 'T3', label: '고정비·구독 방치 기질', score: deficits.fixed * 1.18   + deficits.plan * 0.20 + deficits.saving * 0.15 },
+        { typeKey: 'T4', label: '세일·가성비 착시 기질', score: deficits.value * 1.18   + deficits.impulse * 0.22 + deficits.micro * 0.10 }
+      ].sort((a, b) => b.score - a.score);
+
+      const minDomainScore = Math.min(...Object.values(domainScores));
+
+      let primaryTypeKey = 'T2';
+      let subTendencyText = '';
+
+      if (totalScore >= 82 && minDomainScore >= 62) {
+        // 완성형 마스터
+        primaryTypeKey = 'T6';
+        subTendencyText = domainScores.value >= 85 ? '가성비 분별력까지 완벽한' : '선저축 자동화가 탄탄한';
+      } else if (totalScore >= 66 && minDomainScore >= 50) {
+        // 밸런스 잡힌 스마트 실속파 + 가장 아쉬운 1순위 기질을 부 성향으로 표시
+        primaryTypeKey = 'T5';
+        subTendencyText = riskScores[0].score > 25 ? `살짝 ${riskScores[0].label}이 섞인` : '전 영역 고른 밸런스의';
+      } else {
+        // 취약 패턴이 뚜렷한 경우 1순위 리스크 유형을 주 유형, 2순위를 부 성향으로 도출
+        primaryTypeKey = riskScores[0].typeKey;
+        if (riskScores[1].score >= 30) {
+          subTendencyText = `${riskScores[1].label}이 함께 섞인`;
+        } else if (deficits.saving >= 50) {
+          subTendencyText = '저축 방어선 보강이 시급한';
+        } else {
+          subTendencyText = PRECISION_TYPES[primaryTypeKey].subPhrase;
+        }
+      }
+
+      // d) 개인별 실제 응답 기반 '가장 취약한 소비 누수 포인트 TOP 2' 자동 진단
+      const sortedWeakDomains = [...DOMAINS]
+        .map((d) => ({
+          ...d,
+          score: domainScores[d.key],
+          relatedItems: itemRecords
+            .filter((r) => r.domain === d.key)
+            .sort((a, b) => a.score - b.score)
+        }))
+        .sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          return a.relatedItems[0].score - b.relatedItems[0].score;
+        });
+
+      const weakTop2 = [sortedWeakDomains[0], sortedWeakDomains[1]];
+
+      return {
+        totalScore,
+        topPercentile,
+        domainScores,
+        primaryTypeKey,
+        subTendencyText,
+        weakTop2,
+        itemRecords
+      };
+    }
+
+    function estimateTopPercentile(score) {
+      if (score >= 92) return 4;
+      if (score >= 85) return 9;
+      if (score >= 78) return 18;
+      if (score >= 70) return 29;
+      if (score >= 60) return 44;
+      if (score >= 50) return 60;
+      if (score >= 38) return 76;
+      return 89;
+    }
+
+    /**
+     * 실제 응답(카페, 배달, 충동소비, 구독, 소액지출)에 기반해 시뮬레이터 초기 추천값 생성
+     */
+    function deriveInitialSlidersFromAnswers(answers, domainScores) {
+      const qImpulse = answers[2] ?? 2;  // 0(절제) ~ 4(방임)
+      const qCafe    = answers[4] ?? 2;
+      const qDeliv   = answers[5] ?? 2;
+      const qSub     = answers[6] ?? 2;
+
+      return {
+        cafe:     Math.max(1, Math.min(6, qCafe + 1)),
+        delivery: Math.max(1, Math.min(4, Math.ceil((qDeliv + 1) * 0.8))),
+        impulse:  Math.max(1, Math.min(5, qImpulse + 1)),
+        fixed:    domainScores.fixed <= 50 ? 4 : 2,
+        micro:    Math.max(1, Math.min(5, qCafe + 1))
+      };
+    }
+
+    /**
+     * =====================================================================
+     * 4. 정밀 결과 화면 시각화 렌더링
+     * =====================================================================
+     */
+    function renderPrecisionResult(analysis, isRestored) {
+      const pType = PRECISION_TYPES[analysis.primaryTypeKey];
+      const segMeta = SEGMENT_META[state.segment];
+
+      // 1) 상단 배지 및 타이틀
+      const pBadge = document.getElementById('res-primary-badge');
+      pBadge.textContent = pType.badge;
+      pBadge.className = `text-xs font-extrabold px-3 py-1 rounded-full ${pType.badgeStyle}`;
+
+      document.getElementById('res-sub-badge').textContent = `부 성향 · ${analysis.subTendencyText}`;
+      document.getElementById('res-segment-label').textContent = segMeta.badge;
+
+      document.getElementById('res-subtitle').textContent = `${analysis.subTendencyText}`;
+      document.getElementById('res-title').textContent = pType.title;
+      document.getElementById('res-emoji').textContent = pType.emoji;
+      document.getElementById('res-description').textContent = pType.desc;
+      document.getElementById('res-participant-share').textContent = pType.shareRatio;
+
+      // 2) 종합 소비 건강 점수 원형 게이지 애니메이션
+      document.getElementById('health-score-num').textContent = analysis.totalScore;
+      document.getElementById('health-percentile-badge').textContent = `상위 ${analysis.topPercentile}%`;
+
+      let gradeText = '지출 통제 시스템 리모델링이 시급해요!';
+      let strokeColor = '#EF4444';
+      if (analysis.totalScore >= 82) {
+        gradeText = '최상위권의 탄탄한 소비·저축 시스템을 갖췄어요!';
+        strokeColor = '#10B981';
+      } else if (analysis.totalScore >= 66) {
+        gradeText = '전반적으로 양호하며 취약 구멍 1~2개만 메우면 완벽해요!';
+        strokeColor = '#2563EB';
+      } else if (analysis.totalScore >= 48) {
+        gradeText = '일상 속 습관성 지출 누수가 자산 형성을 늦추고 있어요.';
+        strokeColor = '#F59E0B';
+      }
+      document.getElementById('health-grade-comment').textContent = gradeText;
+
+      const circleEl = document.getElementById('health-score-circle');
+      const circumference = 219.91; // 2 * PI * 35
+      circleEl.style.stroke = strokeColor;
+      circleEl.style.strokeDashoffset = circumference;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const offset = circumference - (analysis.totalScore / 100) * circumference;
+          circleEl.style.strokeDashoffset = offset;
+        }, 80);
+      });
+
+      // 3) SVG 육각형 레이더 차트 그리기
+      renderHexagonRadar(analysis.domainScores);
+
+      // 4) 6대 소비 역량 세부 막대그래프 렌더링
+      renderDomainBars(analysis.domainScores, analysis.weakTop2);
+
+      // 5) 개인 응답 기반 취약 누수 포인트 TOP 2 리포트 카드 생성
+      renderPersonalLeakReport(analysis);
+
+      // 6) 소비 유형 궁합 렌더링
+      document.getElementById('match-best-name').textContent = pType.bestMatch.name;
+      document.getElementById('match-best-desc').textContent = pType.bestMatch.desc;
+      document.getElementById('match-worst-name').textContent = pType.worstMatch.name;
+      document.getElementById('match-worst-desc').textContent = pType.worstMatch.desc;
+
+      // 7) 취약 영역 TOP 2 맞춤 동적 실천 미션 4가지 렌더링
+      renderDynamicMissions(analysis.weakTop2);
+
+      // 8) 5종 절약 시뮬레이터 세팅 및 실시간 계산
+      initSimulatorControls();
+      recalcSimulator(false);
+
+      // 9) 취약점 + 주 유형 맞춤 추천 솔루션 카드 3개 렌더링
+      renderTailoredSolutions(analysis);
+    }
+
+    /**
+     * SVG 육각형 레이더 차트 렌더링 (외부 라이브러리 없이 순수 SVG 다각형 계산)
+     */
+    function renderHexagonRadar(domainScores) {
+      const svg = document.getElementById('radar-svg');
+      const cx = 160;
+      const cy = 132;
+      const maxR = 86;
+
+      const angleForIndex = (i) => (-Math.PI / 2) + (i * (2 * Math.PI / 6));
+      const pointAt = (i, ratio) => {
+        const ang = angleForIndex(i);
+        return {
+          x: (cx + maxR * ratio * Math.cos(ang)).toFixed(1),
+          y: (cy + maxR * ratio * Math.sin(ang)).toFixed(1)
+        };
+      };
+
+      // 배경 동심 육각형 그리드 (25%, 50%, 75%, 100%)
+      let gridPolygons = '';
+      [0.25, 0.5, 0.75, 1].forEach((level) => {
+        const pts = DOMAINS.map((_, idx) => {
+          const p = pointAt(idx, level);
+          return `${p.x},${p.y}`;
+        }).join(' ');
+        gridPolygons += `<polygon points="${pts}" fill="${level === 1 ? '#FFFFFF' : 'none'}" stroke="#CBD5E1" stroke-width="${level === 1 ? '1.3' : '0.9'}" />`;
+      });
+
+      // 권장 기준선 70점 육각형 (민트 점선)
+      const benchmarkPts = DOMAINS.map((_, idx) => {
+        const p = pointAt(idx, 0.7);
+        return `${p.x},${p.y}`;
+      }).join(' ');
+
+      // 중심축 라인
+      let axisLines = '';
+      DOMAINS.forEach((_, idx) => {
+        const p = pointAt(idx, 1);
+        axisLines += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#E2E8F0" stroke-width="1" />`;
+      });
+
+      // 사용자 실제 6대 점수 폴리곤 (최소 반지름 8% 보장해 시각적 식별성 유지)
+      const userPtsArr = DOMAINS.map((d, idx) => {
+        const sc = domainScores[d.key];
+        const ratio = Math.max(0.08, sc / 100);
+        return { ...pointAt(idx, ratio), score: sc, label: d.short };
+      });
+      const userPolygonPoints = userPtsArr.map((p) => `${p.x},${p.y}`).join(' ');
+
+      // 꼭짓점 데이터 포인트 및 외곽 라벨
+      let dotsAndLabels = '';
+      DOMAINS.forEach((d, idx) => {
+        const up = userPtsArr[idx];
+        const lp = pointAt(idx, 1.27);
+        let anchor = 'middle';
+        if (idx === 1 || idx === 2) anchor = 'start';
+        if (idx === 4 || idx === 5) anchor = 'end';
+
+        const lx = idx === 1 || idx === 2 ? parseFloat(lp.x) - 6 : idx === 4 || idx === 5 ? parseFloat(lp.x) + 6 : parseFloat(lp.x);
+
+        dotsAndLabels += `
+          <circle cx="${up.x}" cy="${up.y}" r="4.2" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.8" />
+          <text x="${lx}" y="${parseFloat(lp.y) - 3}" text-anchor="${anchor}" font-size="11" font-weight="800" fill="#111827">${d.short}</text>
+          <text x="${lx}" y="${parseFloat(lp.y) + 11}" text-anchor="${anchor}" font-size="10.5" font-weight="700" fill="#2563EB">${up.score}점</text>
+        `;
+      });
+
+      svg.innerHTML = `
+        ${gridPolygons}
+        ${axisLines}
+        <polygon points="${benchmarkPts}" fill="none" stroke="#10B981" stroke-width="1.4" stroke-dasharray="4 3" />
+        <polygon points="${userPolygonPoints}" fill="rgba(37, 99, 235, 0.22)" stroke="#2563EB" stroke-width="2.4" stroke-linejoin="round" />
+        ${dotsAndLabels}
+      `;
+    }
+
+    /**
+     * 6대 소비 지표 점수 가로 막대그래프 렌더링
+     */
+    function renderDomainBars(domainScores, weakTop2) {
+      const container = document.getElementById('domain-bars-container');
+      container.innerHTML = '';
+
+      const weakKeys = new Set(weakTop2.map((w) => w.key));
+
+      DOMAINS.forEach((d) => {
+        const sc = domainScores[d.key];
+        const isWeak = weakKeys.has(d.key) && sc < 75;
+
+        let barColor = 'bg-brandBlue';
+        if (sc >= 80) barColor = 'bg-brandMint';
+        else if (sc < 45) barColor = 'bg-red-500';
+        else if (sc < 65) barColor = 'bg-amber-500';
+
+        const row = document.createElement('div');
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-inkDark">${d.short}</span>
+              ${isWeak ? '<span class="text-[10px] font-extrabold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">집중 보완</span>' : ''}
+            </div>
+            <span class="font-extrabold tabular-nums ${sc < 50 ? 'text-red-500' : 'text-inkGray'}">${sc}점</span>
+          </div>
+          <div class="w-full h-2.5 bg-appBg rounded-full overflow-hidden">
+            <div class="h-full ${barColor} rounded-full transition-all duration-700 ease-out" style="width: 0%;" data-bar-target="${sc}%"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          container.querySelectorAll('[data-bar-target]').forEach((el) => {
+            el.style.width = el.getAttribute('data-bar-target');
+          });
+        }, 90);
+      });
+    }
+
+    /**
+     * 개인 실제 응답 기반 '취약 누수 포인트 TOP 2' 정밀 리포트 동적 생성
+     */
+    function renderPersonalLeakReport(analysis) {
+      const [w1, w2] = analysis.weakTop2;
+      const worstItem1 = w1.relatedItems[0];
+      const worstItem2 = w2.relatedItems[0];
+
+      const headlineEl = document.getElementById('leak-headline-comment');
+      if (analysis.totalScore >= 85 && w1.score >= 75) {
+        headlineEl.innerHTML =
+          `전반적인 소비 방어력이 매우 훌륭합니다! 다만 상대적으로 점수가 낮은 <strong>[${worstItem1.topic}]</strong>와 <strong>[${worstItem2.topic}]</strong> 항목만 미세 조정하면 완벽한 재무 시스템이 완성됩니다.`;
+      } else {
+        headlineEl.innerHTML =
+          `12문항 응답 분석 결과, 당신은 특히 <strong>[${worstItem1.topic}]</strong> 및 <strong>[${worstItem2.topic}]</strong> 영역에서 가장 큰 지출 누수가 발생하고 있습니다.`;
+      }
+
+      const cardsContainer = document.getElementById('leak-cards-container');
+      cardsContainer.innerHTML = '';
+
+      [w1, w2].forEach((weakObj, idx) => {
+        const picked = weakObj.relatedItems[0];
+        const card = document.createElement('div');
+        card.className = 'rounded-2xl bg-appBg/80 border border-lineGray p-4';
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="text-xs font-extrabold text-inkDark">
+              🚨 취약 포인트 ${idx + 1}위 · <span class="text-brandBlue">${weakObj.short} (${weakObj.score}점)</span>
+            </span>
+            <span class="text-[11px] font-bold text-inkSub">문항 Q${picked.qIndex} 기반</span>
+          </div>
+          <p class="text-[13px] font-bold text-inkDark mb-1.5">${weakObj.leakTitle}</p>
+          <div class="bg-white rounded-xl p-3 border border-lineGray/80 text-[12px] text-inkGray leading-snug">
+            <span class="font-extrabold text-inkDark block mb-0.5">📌 내가 선택한 실제 응답 패턴 (${picked.topic})</span>
+            “${picked.selectedText}”
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    /**
+     * 취약 영역 TOP 2에 맞춰 동적 생성되는 4가지 맞춤 실천 미션
+     */
+    function renderDynamicMissions(weakTop2) {
+      const missions = [
+        ...DOMAIN_MISSIONS[weakTop2[0].key],
+        ...DOMAIN_MISSIONS[weakTop2[1].key]
+      ];
+
+      const container = document.getElementById('missions-list-container');
+      container.innerHTML = '';
+
+      missions.forEach((text, idx) => {
+        const checked = Boolean(state.missionsChecked[idx]);
+        const tagDomain = idx < 2 ? weakTop2[0].short : weakTop2[1].short;
+
+        const row = document.createElement('div');
+        row.className = `mission-item p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+          checked
+            ? 'checked bg-brandMintLight/50 border-brandMint/40'
+            : 'bg-appBg/65 border-transparent hover:border-lineGray'
+        }`;
+
+        row.innerHTML = `
+          <div class="mission-box w-5 h-5 rounded-md border-2 border-inkSub/60 bg-white flex items-center justify-center shrink-0 mt-0.5 transition-colors">
+            <svg class="w-3.5 h-3.5 text-white ${checked ? 'opacity-100' : 'opacity-0'}" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <span class="inline-block text-[10.5px] font-extrabold text-brandBlue mb-0.5">[${tagDomain} 개선]</span>
+            <p class="mission-text text-[13.5px] font-semibold text-inkDark leading-snug select-none">${text}</p>
+          </div>
+        `;
+
+        row.onclick = () => {
+          state.missionsChecked[idx] = !state.missionsChecked[idx];
+          saveToStorage();
+          renderDynamicMissions(weakTop2);
+        };
+
+        container.appendChild(row);
+      });
+
+      const doneCnt = state.missionsChecked.filter(Boolean).length;
+      document.getElementById('mission-progress-badge').textContent = `${doneCnt}/4 달성`;
+    }
+
+    /**
+     * =====================================================================
+     * 5. 5종 절약 시뮬레이터 & 3년 연 4% 복리 계산 + 위시리스트 달성기
+     * =====================================================================
+     */
+    function initSimulatorControls() {
+      const segMeta = SEGMENT_META[state.segment];
+      document.getElementById('sim-unit-pill').textContent = segMeta.simPill;
+      document.getElementById('unit-cafe').textContent = segMeta.units.cafe.toLocaleString('ko-KR');
+      document.getElementById('unit-delivery').textContent = segMeta.units.delivery.toLocaleString('ko-KR');
+      document.getElementById('unit-impulse').textContent = segMeta.units.impulse.toLocaleString('ko-KR');
+      document.getElementById('unit-micro').textContent = segMeta.units.micro.toLocaleString('ko-KR');
+
+      document.getElementById('sl-cafe').value = state.sliders.cafe;
+      document.getElementById('sl-delivery').value = state.sliders.delivery;
+      document.getElementById('sl-impulse').value = state.sliders.impulse;
+      document.getElementById('sl-fixed').value = state.sliders.fixed;
+      document.getElementById('sl-micro').value = state.sliders.micro;
+
+      document.getElementById('wish-title-input').value = state.wishlist.title || '아이패드 에어';
+      document.getElementById('wish-amount-input').value = state.wishlist.amount || 900000;
+    }
+
+    function setWishPreset(title, amount) {
+      document.getElementById('wish-title-input').value = title;
+      document.getElementById('wish-amount-input').value = amount;
+      onWishlistChange();
+      showToast(`위시리스트 목표가 ‘${title}’(으)로 설정되었습니다!`);
+    }
+
+    function onWishlistChange() {
+      const t = document.getElementById('wish-title-input').value.trim();
+      const a = parseInt(document.getElementById('wish-amount-input').value, 10);
+      state.wishlist.title = t || '나의 위시리스트';
+      state.wishlist.amount = !isNaN(a) && a > 0 ? a : 100000;
+      recalcSimulator(true);
+    }
+
+    function recalcSimulator(shouldSave = true) {
+      const units = SEGMENT_META[state.segment].units;
+
+      const vCafe     = parseInt(document.getElementById('sl-cafe').value, 10);
+      const vDelivery = parseInt(document.getElementById('sl-delivery').value, 10);
+      const vImpulse  = parseInt(document.getElementById('sl-impulse').value, 10);
+      const vFixed    = parseInt(document.getElementById('sl-fixed').value, 10);
+      const vMicro    = parseInt(document.getElementById('sl-micro').value, 10);
+
+      state.sliders = { cafe: vCafe, delivery: vDelivery, impulse: vImpulse, fixed: vFixed, micro: vMicro };
+
+      document.getElementById('lbl-cafe').textContent = vCafe;
+      document.getElementById('lbl-delivery').textContent = vDelivery;
+      document.getElementById('lbl-impulse').textContent = vImpulse;
+      document.getElementById('lbl-fixed').textContent = vFixed;
+      document.getElementById('lbl-micro').textContent = vMicro;
+
+      paintSliderTrack('sl-cafe', vCafe, 7, '#2563EB');
+      paintSliderTrack('sl-delivery', vDelivery, 6, '#2563EB');
+      paintSliderTrack('sl-impulse', vImpulse, 8, '#2563EB');
+      paintSliderTrack('sl-fixed', vFixed, 12, '#10B981');
+      paintSliderTrack('sl-micro', vMicro, 7, '#10B981');
+
+      // 월간 예상 절약액 합산 (주간 항목은 월 평균 4.3주 대신 직관적 4주 기준 적용)
+      const mCafe     = vCafe * units.cafe * 4;
+      const mDelivery = vDelivery * units.delivery * 4;
+      const mImpulse  = vImpulse * units.impulse;
+      const mFixed    = vFixed * 10000;
+      const mMicro    = vMicro * units.micro * 4;
+
+      const monthlyTotal = mCafe + mDelivery + mImpulse + mFixed + mMicro;
+      const yearlyTotal = monthlyTotal * 12;
+
+      // 3년(36개월) 연 4% 월복리 적립식 미래가치 계산: FV = P * [((1 + r)^n - 1) / r] * (1 + r)
+      const r = 0.04 / 12;
+      const n = 36;
+      const compound3Yr = monthlyTotal > 0
+        ? Math.round(monthlyTotal * (((Math.pow(1 + r, n) - 1) / r) * (1 + r)))
+        : 0;
+
+      document.getElementById('sim-monthly-out').textContent = monthlyTotal.toLocaleString('ko-KR');
+      document.getElementById('sim-yearly-out').textContent = yearlyTotal.toLocaleString('ko-KR');
+      document.getElementById('sim-3yr-out').textContent = compound3Yr.toLocaleString('ko-KR');
+
+      // 위시리스트 달성률 & 소요 개월 수
+      const wTitle = document.getElementById('wish-title-input').value.trim() || '나의 위시리스트';
+      const wPrice = Math.max(10000, parseInt(document.getElementById('wish-amount-input').value, 10) || 900000);
+
+      document.getElementById('wish-out-title').textContent = wTitle;
+      document.getElementById('wish-out-price').textContent = wPrice.toLocaleString('ko-KR');
+
+      const pctYear = Math.round((yearlyTotal / wPrice) * 100);
+      document.getElementById('wish-out-percent').textContent = `1년 기준 ${pctYear}% 달성`;
+      document.getElementById('wish-out-bar').style.width = `${Math.min(100, pctYear)}%`;
+
+      const etaEl = document.getElementById('wish-out-eta');
+      if (monthlyTotal <= 0) {
+        etaEl.innerHTML = '⏳ 위 슬라이더를 조절해 월간 절약 플랜을 만들어 보세요!';
+      } else {
+        const months = (wPrice / monthlyTotal);
+        if (months <= 1) {
+          etaEl.innerHTML = `🎉 이대로 실천하면 <strong>1개월 이내</strong>에 바로 목표 달성 가능!`;
+        } else {
+          const roundedMonths = Math.ceil(months * 10) / 10;
+          etaEl.innerHTML = `🚀 매달 ${monthlyTotal.toLocaleString('ko-KR')}원 절약 시 <strong>약 ${roundedMonths}개월 뒤</strong> 목표 달성!`;
+        }
+      }
+
+      if (shouldSave) saveToStorage();
+    }
+
+    function paintSliderTrack(id, val, max, color) {
+      const el = document.getElementById(id);
+      const pct = (val / max) * 100;
+      el.style.background = `linear-gradient(to right, ${color} ${pct}%, #E5E7EB ${pct}%)`;
+    }
+
+    /**
+     * =====================================================================
+     * 6. 취약점 맞춤 추천 솔루션 TOP 3 렌더링 & 상세 가이드 모달
+     * =====================================================================
+     */
+    function renderTailoredSolutions(analysis) {
+      // 취약 도메인 1위, 2위 + 저축/예산 중 보완이 필요한 3번째 도메인을 중복 없이 선정
+      const chosenKeys = [analysis.weakTop2[0].key, analysis.weakTop2[1].key];
+      const fallbackOrder = ['saving', 'plan', 'fixed', 'micro', 'impulse', 'value'];
+      for (const k of fallbackOrder) {
+        if (!chosenKeys.includes(k)) {
+          chosenKeys.push(k);
+          break;
+        }
+      }
+
+      activeSolutionsList = chosenKeys.map((k) => DOMAIN_SOLUTIONS[k]);
+
+      const container = document.getElementById('solutions-list-container');
+      container.innerHTML = '';
+
+      activeSolutionsList.forEach((sol, idx) => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-2xl bg-appBg/75 hover:bg-brandBlueLight/45 border border-lineGray hover:border-brandBlue/30 transition-all flex items-center justify-between gap-3';
+        card.innerHTML = `
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-11 h-11 rounded-2xl bg-white border border-lineGray/70 flex items-center justify-center text-xl shrink-0">
+              ${sol.icon}
+            </div>
+            <div class="min-w-0">
+              <span class="inline-block text-[10.5px] font-extrabold text-brandBlue mb-0.5">${sol.tag}</span>
+              <h4 class="text-[14px] font-extrabold text-inkDark leading-snug mb-1">${sol.title}</h4>
+              <p class="text-[12px] text-inkGray leading-snug line-clamp-2">${sol.desc}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="openGuideModal(${idx})"
+            class="shrink-0 px-3 py-2 rounded-xl bg-white hover:bg-brandBlue hover:text-white text-brandBlue text-xs font-extrabold border border-brandBlue/25 transition-colors cursor-pointer"
+          >
+            실행 가이드 보기
+          </button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openGuideModal(idx) {
+      const sol = activeSolutionsList[idx];
+      if (!sol) return;
+
+      document.getElementById('modal-sol-icon').textContent = sol.icon;
+      document.getElementById('modal-sol-tag').textContent = sol.tag;
+      document.getElementById('modal-sol-title').textContent = sol.title;
+      document.getElementById('modal-sol-desc').textContent = sol.desc;
+
+      const ul = document.getElementById('modal-sol-steps');
+      ul.innerHTML = '';
+      sol.steps.forEach((stepTxt, i) => {
+        const li = document.createElement('li');
+        li.className = 'flex items-start gap-2.5';
+        li.innerHTML = `
+          <span class="w-5 h-5 rounded-full bg-brandBlue text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span>
+          <span class="leading-snug">${stepTxt}</span>
+        `;
+        ul.appendChild(li);
+      });
+
+      document.getElementById('guide-modal').classList.remove('hidden');
+    }
+
+    function closeGuideModal(event) {
+      if (!event || event.target.id === 'guide-modal') {
+        document.getElementById('guide-modal').classList.add('hidden');
+      }
+    }
+
+    function confirmGuideRead() {
+      closeGuideModal();
+      showToast('실행 가이드 확인 완료! 오늘 바로 1단계부터 시작해 보세요.');
+    }
+
+    /**
+     * PNG 이미지 저장 (html2canvas) 및 결과 요약 텍스트 클립보드 복사
+     */
+    async function downloadReportImage() {
+      const target = document.getElementById('capture-report-area');
+      if (typeof html2canvas === 'undefined') {
+        showToast('이미지 모듈을 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+
+      showToast('정밀 결과 카드를 고화질 PNG로 생성하고 있습니다...');
+      try {
+        const canvas = await html2canvas(target, {
+          scale: 2,
+          backgroundColor: '#FFFFFF',
+          useCORS: true,
+          logging: false
+        });
+        const a = document.createElement('a');
+        const pTitle = PRECISION_TYPES[state.lastAnalysis.primaryTypeKey].shortName;
+        a.download = `머니체크PRO_정밀진단_${pTitle}.png`;
+        a.href = canvas.toDataURL('image/png');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('정밀 결과 카드가 PNG 이미지로 저장되었습니다!');
+      } catch (e) {
+        showToast('이미지 생성에 실패했습니다. 텍스트 복사를 이용해 주세요.');
+      }
+    }
+
+    function copyReportSummary() {
+      if (!state.lastAnalysis) return;
+      const an = state.lastAnalysis;
+      const pType = PRECISION_TYPES[an.primaryTypeKey];
+      const segName = SEGMENT_META[state.segment].name;
+      const yearlyOut = document.getElementById('sim-yearly-out').textContent;
+      const compound3Yr = document.getElementById('sim-3yr-out').textContent;
+
+      const summary =
+        `[머니체크 PRO · 12문항 소비 습관 정밀 진단 리포트]\n` +
+        `• 진단 그룹: ${segName}\n` +
+        `• 주 유형: ${pType.emoji} ${pType.title}\n` +
+        `• 부 성향: ${an.subTendencyText}\n` +
+        `• 종합 소비 건강 점수: ${an.totalScore}점 (상위 ${an.topPercentile}%)\n` +
+        `• 취약 누수 TOP 2: ${an.weakTop2[0].short}(${an.weakTop2[0].score}점), ${an.weakTop2[1].short}(${an.weakTop2[1].score}점)\n` +
+        `• 1년 예상 절약액: ${yearlyOut}원 (3년 복리 약 ${compound3Yr}원)`;
+
+      const ta = document.createElement('textarea');
+      ta.value = summary;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+
+      try {
+        document.execCommand('copy');
+        showToast('정밀 진단 요약 텍스트가 클립보드에 복사되었습니다!');
+      } catch (e) {
+        showToast('클립보드 복사에 실패했습니다.');
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+
+    /**
+     * 네비게이션 및 초기화 기능
+     */
+    function goHomeView() {
+      quizViewEl.classList.add('hidden');
+      resultViewEl.classList.add('hidden');
+      startViewEl.classList.remove('hidden');
+      loadFromStorage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function restartQuizKeepSegment() {
+      quizViewEl.classList.add('hidden');
+      resultViewEl.classList.add('hidden');
+      startViewEl.classList.remove('hidden');
+      loadFromStorage();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetAllSavedData() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {}
+
+      state = {
+        segment: 'student',
+        completed: false,
+        answers: new Array(12).fill(null),
+        missionsChecked: [false, false, false, false],
+        sliders: { cafe: 2, delivery: 1, impulse: 2, fixed: 2, micro: 2 },
+        wishlist: { title: '아이패드 에어', amount: 900000 },
+        lastAnalysis: null
+      };
+
+      document.getElementById('resume-banner').classList.add('hidden');
+      const pill = document.getElementById('autosave-indicator');
+      pill.classList.add('hidden');
+      pill.classList.remove('inline-flex');
+
+      selectSegment('student', false);
+      quizViewEl.classList.add('hidden');
+      resultViewEl.classList.add('hidden');
+      startViewEl.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast('저장된 모든 정밀 진단 기록이 초기화되었습니다.');
+    }
+
+    /**
+     * 하단 플로팅 토스트 메시지
+     */
+    let toastTimer;
+    function showToast(msg) {
+      const bar = document.getElementById('toast-bar');
+      document.getElementById('toast-text').textContent = msg;
+      bar.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+      bar.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        bar.classList.remove('opacity-100', 'translate-y-0');
+        bar.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+      }, 2600);
+    }
+  </script>
+</body>
+</html>

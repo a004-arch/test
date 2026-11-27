@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-serif: "Hahmlet", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --ivory-canvas: #faf8f3;
+  --ivory-surface: #f2efe7;
+  --ivory-card: #ffffff;
+  --ivory-border: #e5dfd3;
+  --ink-primary: #1e1d1a;
+  --ink-secondary: #57534c;
+  --ink-muted: #7d776c;
+  --accent-forest: #1f4e3d;
+  --accent-forest-hover: #173b2e;
+  --accent-forest-soft: #eaf1ee;
+  --accent-ochre: #b5781d;
+  --accent-ochre-soft: #f9f2e4;
+  --accent-crimson: #b43c32;
+  --accent-crimson-soft: #fbeeed;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ivory-canvas);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ivory editorial range slider */
+input[type="range"].ivory-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].ivory-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #1f4e3d;
+  box-shadow: 0 2px 6px rgba(30, 29, 26, 0.16);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input[type="range"].ivory-slider::-webkit-slider-thumb:hover,
+input[type="range"].ivory-slider:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+
+input[type="range"].ivory-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid #1f4e3d;
+  box-shadow: 0 2px 6px rgba(30, 29, 26, 0.16);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

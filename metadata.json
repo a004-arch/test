@@ -1,0 +1,6 @@
+{
+  "name": "머니체크 — 소비 습관 진단 & 개선",
+  "description": "12문항 정밀 소비 습관 테스트와 6대 소비 지표 분석, 맞춤형 지출 개선 미션 및 3년 복리 절약 시뮬레이터를 제공하는 아이보리 톤 웹 애플리케이션.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
