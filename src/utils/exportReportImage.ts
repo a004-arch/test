@@ -57,13 +57,16 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
-export function exportReportCardPng(
+export async function exportReportCardPng(
   analysis: AnalysisResult,
   segment: Segment,
   yearlySavings: number,
   compound3Yr: number
-): boolean {
+): Promise<boolean> {
   try {
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      await document.fonts.ready;
+    }
     const width = 1080;
     const height = 1380;
     const canvas = document.createElement('canvas');

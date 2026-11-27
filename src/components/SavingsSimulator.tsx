@@ -1,3 +1,4 @@
+import { Minus, Plus } from 'lucide-react';
 import {
   SEGMENT_META,
   Segment,
@@ -37,14 +38,73 @@ export function SavingsSimulator({
   const segMeta = SEGMENT_META[segment];
   const metrics = computeSimulatorMetrics(segment, sliders, wishlist);
 
-  const updateSlider = (key: keyof SliderValues, val: number) => {
-    onChangeSliders({ ...sliders, [key]: val });
+  const updateSlider = (key: keyof SliderValues, val: number, max: number) => {
+    const clamped = Math.max(0, Math.min(max, val));
+    onChangeSliders({ ...sliders, [key]: clamped });
   };
 
   const trackBg = (val: number, max: number, activeColor: string) => {
     const pct = Math.min(100, Math.max(0, (val / max) * 100));
     return `linear-gradient(to right, ${activeColor} ${pct}%, #E5DFD3 ${pct}%)`;
   };
+
+  const sliderRows: {
+    id: string;
+    key: keyof SliderValues;
+    label: string;
+    unitText: string;
+    monthlyAmount: number;
+    max: number;
+    color: string;
+  }[] = [
+    {
+      id: 'sl-cafe',
+      key: 'cafe',
+      label: '1. 주간 카페·디저트 줄이기',
+      unitText: `주 ${sliders.cafe}회 · 회당 ${segMeta.units.cafe.toLocaleString('ko-KR')}원`,
+      monthlyAmount: metrics.breakdown.cafe,
+      max: 7,
+      color: '#1F4E3D',
+    },
+    {
+      id: 'sl-delivery',
+      key: 'delivery',
+      label: '2. 주간 배달·야식 줄이기',
+      unitText: `주 ${sliders.delivery}회 · 회당 ${segMeta.units.delivery.toLocaleString('ko-KR')}원`,
+      monthlyAmount: metrics.breakdown.delivery,
+      max: 6,
+      color: '#1F4E3D',
+    },
+    {
+      id: 'sl-impulse',
+      key: 'impulse',
+      label: '3. 월간 택시·충동쇼핑 줄이기',
+      unitText: `월 ${sliders.impulse}회 · 회당 ${segMeta.units.impulse.toLocaleString('ko-KR')}원`,
+      monthlyAmount: metrics.breakdown.impulse,
+      max: 8,
+      color: '#1F4E3D',
+    },
+    {
+      id: 'sl-fixed',
+      key: 'fixed',
+      label: '4. OTT·멤버십·통신비 다이어트',
+      unitText: `월 ${sliders.fixed}만 원 절감`,
+      monthlyAmount: metrics.breakdown.fixed,
+      max: 12,
+      color: '#B5781D',
+    },
+    {
+      id: 'sl-micro',
+      key: 'micro',
+      label: '5. 주간 편의점·간식·소액결제 줄이기',
+      unitText: `주 ${sliders.micro}회 · 회당 ${segMeta.units.micro.toLocaleString('ko-KR')}원`,
+      monthlyAmount: metrics.breakdown.micro,
+      max: 7,
+      color: '#B5781D',
+    },
+  ];
+
+  const topDriver = [...sliderRows].sort((a, b) => b.monthlyAmount - a.monthlyAmount)[0];
 
   return (
     <div className="bg-white border border-[#E5DFD3] rounded-2xl p-6 sm:p-8">
@@ -173,115 +233,63 @@ export function SavingsSimulator({
           </div>
 
           <div className="space-y-5">
-            <div>
-              <div className="flex justify-between items-baseline gap-2 mb-2">
-                <label htmlFor="sl-cafe" className="text-sm font-semibold text-[#1E1D1A]">
-                  1. 주간 카페·디저트 줄이기
-                </label>
-                <span className="text-xs font-mono tabular-nums text-[#1F4E3D] font-semibold shrink-0">
-                  주 {sliders.cafe}회 · 회당 {segMeta.units.cafe.toLocaleString('ko-KR')}원
-                </span>
-              </div>
-              <input
-                id="sl-cafe"
-                type="range"
-                min={0}
-                max={7}
-                step={1}
-                value={sliders.cafe}
-                onChange={(e) => updateSlider('cafe', Number(e.target.value))}
-                style={{ background: trackBg(sliders.cafe, 7, '#1F4E3D') }}
-                className="ivory-slider"
-              />
-            </div>
+            {sliderRows.map((row) => {
+              const val = sliders[row.key];
+              return (
+                <div key={row.key} className="space-y-2">
+                  <div className="flex flex-wrap justify-between items-baseline gap-2">
+                    <label htmlFor={row.id} className="text-sm font-semibold text-[#1E1D1A]">
+                      {row.label}
+                    </label>
+                    <div className="flex items-center gap-2 text-xs font-mono tabular-nums">
+                      <span className="text-[#57534C]">{row.unitText}</span>
+                      <span aria-hidden="true" className="text-[#CFC7B7]">
+                        ·
+                      </span>
+                      <span className="font-semibold text-[#1F4E3D]">
+                        월 {row.monthlyAmount.toLocaleString('ko-KR')}원
+                      </span>
+                    </div>
+                  </div>
 
-            <div>
-              <div className="flex justify-between items-baseline gap-2 mb-2">
-                <label htmlFor="sl-delivery" className="text-sm font-semibold text-[#1E1D1A]">
-                  2. 주간 배달·야식 줄이기
-                </label>
-                <span className="text-xs font-mono tabular-nums text-[#1F4E3D] font-semibold shrink-0">
-                  주 {sliders.delivery}회 · 회당 {segMeta.units.delivery.toLocaleString('ko-KR')}원
-                </span>
-              </div>
-              <input
-                id="sl-delivery"
-                type="range"
-                min={0}
-                max={6}
-                step={1}
-                value={sliders.delivery}
-                onChange={(e) => updateSlider('delivery', Number(e.target.value))}
-                style={{ background: trackBg(sliders.delivery, 6, '#1F4E3D') }}
-                className="ivory-slider"
-              />
-            </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => updateSlider(row.key, val - 1, row.max)}
+                      disabled={val <= 0}
+                      aria-label={`${row.label} 감소`}
+                      className="w-8 h-8 rounded-md border border-[#E5DFD3] bg-[#FAF8F3] hover:bg-[#F2EFE7] disabled:opacity-40 flex items-center justify-center text-[#1E1D1A] shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
 
-            <div>
-              <div className="flex justify-between items-baseline gap-2 mb-2">
-                <label htmlFor="sl-impulse" className="text-sm font-semibold text-[#1E1D1A]">
-                  3. 월간 택시·충동쇼핑 줄이기
-                </label>
-                <span className="text-xs font-mono tabular-nums text-[#1F4E3D] font-semibold shrink-0">
-                  월 {sliders.impulse}회 · 회당 {segMeta.units.impulse.toLocaleString('ko-KR')}원
-                </span>
-              </div>
-              <input
-                id="sl-impulse"
-                type="range"
-                min={0}
-                max={8}
-                step={1}
-                value={sliders.impulse}
-                onChange={(e) => updateSlider('impulse', Number(e.target.value))}
-                style={{ background: trackBg(sliders.impulse, 8, '#1F4E3D') }}
-                className="ivory-slider"
-              />
-            </div>
+                    <input
+                      id={row.id}
+                      type="range"
+                      min={0}
+                      max={row.max}
+                      step={1}
+                      value={val}
+                      onChange={(e) =>
+                        updateSlider(row.key, Number(e.target.value), row.max)
+                      }
+                      style={{ background: trackBg(val, row.max, row.color) }}
+                      className="ivory-slider flex-1"
+                    />
 
-            <div>
-              <div className="flex justify-between items-baseline gap-2 mb-2">
-                <label htmlFor="sl-fixed" className="text-sm font-semibold text-[#1E1D1A]">
-                  4. OTT·멤버십·통신비 다이어트
-                </label>
-                <span className="text-xs font-mono tabular-nums text-[#B5781D] font-semibold shrink-0">
-                  월 {sliders.fixed}만 원 절감
-                </span>
-              </div>
-              <input
-                id="sl-fixed"
-                type="range"
-                min={0}
-                max={12}
-                step={1}
-                value={sliders.fixed}
-                onChange={(e) => updateSlider('fixed', Number(e.target.value))}
-                style={{ background: trackBg(sliders.fixed, 12, '#B5781D') }}
-                className="ivory-slider"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between items-baseline gap-2 mb-2">
-                <label htmlFor="sl-micro" className="text-sm font-semibold text-[#1E1D1A]">
-                  5. 주간 편의점·간식·소액결제 줄이기
-                </label>
-                <span className="text-xs font-mono tabular-nums text-[#B5781D] font-semibold shrink-0">
-                  주 {sliders.micro}회 · 회당 {segMeta.units.micro.toLocaleString('ko-KR')}원
-                </span>
-              </div>
-              <input
-                id="sl-micro"
-                type="range"
-                min={0}
-                max={7}
-                step={1}
-                value={sliders.micro}
-                onChange={(e) => updateSlider('micro', Number(e.target.value))}
-                style={{ background: trackBg(sliders.micro, 7, '#B5781D') }}
-                className="ivory-slider"
-              />
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => updateSlider(row.key, val + 1, row.max)}
+                      disabled={val >= row.max}
+                      aria-label={`${row.label} 증가`}
+                      className="w-8 h-8 rounded-md border border-[#E5DFD3] bg-[#FAF8F3] hover:bg-[#F2EFE7] disabled:opacity-40 flex items-center justify-center text-[#1E1D1A] shrink-0 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -309,6 +317,15 @@ export function SavingsSimulator({
             <p className="font-mono tabular-nums text-3xl sm:text-4xl font-bold text-[#E7C888] tracking-tight">
               {metrics.compound3Yr.toLocaleString('ko-KR')}원
             </p>
+            {metrics.monthlyTotal > 0 && topDriver.monthlyAmount > 0 && (
+              <p className="text-xs text-[#CFC7B7] mt-2">
+                가장 큰 절약 비중: {topDriver.label.replace(/^\d+\.\s*/, '')} (월{' '}
+                <span className="font-mono tabular-nums text-[#FAF8F3]">
+                  {topDriver.monthlyAmount.toLocaleString('ko-KR')}원
+                </span>
+                )
+              </p>
+            )}
           </div>
 
           <div className="bg-white/8 border border-white/10 rounded-xl p-4 space-y-2.5">

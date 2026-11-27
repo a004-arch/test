@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import { ArrowRight, Check } from 'lucide-react';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
@@ -16,38 +17,42 @@ import {
   STORAGE_KEY,
   Segment,
   SliderValues,
+  TYPE_SAMPLE_PROFILES,
   WishlistGoal,
   deriveInitialSlidersFromAnswers,
   runPrecisionEngine,
 } from './data/spendingData';
 
 type ViewMode = 'home' | 'quiz' | 'result';
+type PreviewMode = 'sample_leak' | 'sample_balanced' | 'saved_user';
 
 const DEFAULT_STATE: AppState = {
   segment: 'student',
+  completedSegment: 'student',
   completed: false,
   answers: new Array(12).fill(null),
+  draftStep: 0,
+  draftAnswers: new Array(12).fill(null),
   missionsChecked: [false, false, false, false],
   sliders: { cafe: 2, delivery: 1, impulse: 2, fixed: 2, micro: 2 },
   wishlist: { title: '아이패드 에어', amount: 900000 },
 };
 
-const SAMPLE_PREVIEW_SCORES: Record<Segment, Record<DomainKey, number>> = {
-  student: {
-    plan: 68,
-    impulse: 52,
-    micro: 44,
-    fixed: 64,
-    value: 58,
-    saving: 48,
+const SAMPLE_PREVIEW_PROFILES: Record<
+  'sample_leak' | 'sample_balanced',
+  { label: string; title: string; score: number; scores: Record<DomainKey, number> }
+> = {
+  sample_leak: {
+    label: '샘플 · 소확행 누수형',
+    title: '가랑비에 옷 젖는 소확행 수집가',
+    score: 54,
+    scores: { plan: 60, impulse: 62, micro: 28, fixed: 65, value: 55, saving: 46 },
   },
-  worker: {
-    plan: 74,
-    impulse: 56,
-    micro: 46,
-    fixed: 52,
-    value: 66,
-    saving: 62,
+  sample_balanced: {
+    label: '샘플 · 스마트 실속파',
+    title: '밸런스 잡힌 스마트 실속파',
+    score: 76,
+    scores: { plan: 78, impulse: 74, micro: 60, fixed: 76, value: 82, saving: 74 },
   },
 };
 
@@ -58,12 +63,30 @@ function loadInitialState(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_STATE;
     const parsed = JSON.parse(raw) as Partial<AppState>;
+    const segment: Segment = parsed.segment === 'worker' ? 'worker' : 'student';
+    const completedSegment: Segment =
+      parsed.completedSegment === 'worker'
+        ? 'worker'
+        : parsed.completedSegment === 'student'
+        ? 'student'
+        : segment;
     return {
-      segment: parsed.segment === 'worker' ? 'worker' : 'student',
+      segment,
+      completedSegment,
       completed: Boolean(parsed.completed),
       answers:
         Array.isArray(parsed.answers) && parsed.answers.length === 12
           ? parsed.answers
+          : new Array(12).fill(null),
+      draftStep:
+        typeof parsed.draftStep === 'number' &&
+        parsed.draftStep >= 0 &&
+        parsed.draftStep <= 11
+          ? parsed.draftStep
+          : 0,
+      draftAnswers:
+        Array.isArray(parsed.draftAnswers) && parsed.draftAnswers.length === 12
+          ? parsed.draftAnswers
           : new Array(12).fill(null),
       missionsChecked:
         Array.isArray(parsed.missionsChecked) && parsed.missionsChecked.length === 4
@@ -80,8 +103,8 @@ function loadInitialState(): AppState {
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => loadInitialState());
   const [viewMode, setViewMode] = useState<ViewMode>('home');
-  const [currentStep, setCurrentStep] = useState<number>(0);
   const [selectedArchiveType, setSelectedArchiveType] = useState<PrecisionType['id']>('T2');
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('sample_leak');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   const advanceTimerRef = useRef<number | null>(null);
@@ -111,8 +134,13 @@ export default function App() {
 
   const savedAnalysis = useMemo(() => {
     if (!appState.completed || appState.answers.some((a) => a === null)) return null;
-    return runPrecisionEngine(appState.segment, appState.answers);
-  }, [appState.completed, appState.segment, appState.answers]);
+    return runPrecisionEngine(appState.completedSegment, appState.answers);
+  }, [appState.completed, appState.completedSegment, appState.answers]);
+
+  const draftAnsweredCount = useMemo(
+    () => appState.draftAnswers.filter((a) => a !== null).length,
+    [appState.draftAnswers]
+  );
 
   const scrollToSection = (sectionId: string) => {
     if (viewMode !== 'home') {
@@ -127,45 +155,73 @@ export default function App() {
 
   const handleStartQuiz = () => {
     if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
-    setCurrentStep(0);
     setAppState((prev) => ({
       ...prev,
-      completed: false,
-      answers: new Array(12).fill(null),
+      draftStep: 0,
+      draftAnswers: new Array(12).fill(null),
     }));
     setViewMode('quiz');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectOption = (optIndex: number) => {
-    const nextAnswers = [...appState.answers];
-    nextAnswers[currentStep] = optIndex;
+  const handleResumeDraftQuiz = () => {
+    if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
+    setViewMode('quiz');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    if (currentStep < 11) {
-      setAppState((prev) => ({ ...prev, answers: nextAnswers }));
+  const handleEditQuestionFromResult = (qIdxZeroBased: number) => {
+    if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
+    setAppState((prev) => ({
+      ...prev,
+      segment: prev.completedSegment,
+      draftStep: Math.max(0, Math.min(11, qIdxZeroBased)),
+      draftAnswers: [...prev.answers],
+    }));
+    setViewMode('quiz');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const finalizeDraftToResult = (finalAnswers: (number | null)[]) => {
+    const analysis = runPrecisionEngine(appState.segment, finalAnswers);
+    const calibratedSliders = deriveInitialSlidersFromAnswers(
+      finalAnswers,
+      analysis.domainScores
+    );
+    setAppState((prev) => ({
+      ...prev,
+      answers: finalAnswers,
+      completedSegment: prev.segment,
+      completed: true,
+      draftStep: 0,
+      draftAnswers: new Array(12).fill(null),
+      missionsChecked: [false, false, false, false],
+      sliders: calibratedSliders,
+    }));
+    setViewMode('result');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSelectOption = (optIndex: number) => {
+    const nextDraft = [...appState.draftAnswers];
+    nextDraft[appState.draftStep] = optIndex;
+
+    if (appState.draftStep < 11) {
+      setAppState((prev) => ({ ...prev, draftAnswers: nextDraft }));
       if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
       advanceTimerRef.current = window.setTimeout(() => {
-        setCurrentStep((s) => Math.min(11, s + 1));
+        setAppState((prev) => ({
+          ...prev,
+          draftStep: Math.min(11, prev.draftStep + 1),
+        }));
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 190);
+      }, 180);
     } else {
-      const analysis = runPrecisionEngine(appState.segment, nextAnswers);
-      const calibratedSliders = deriveInitialSlidersFromAnswers(
-        nextAnswers,
-        analysis.domainScores
-      );
-      setAppState((prev) => ({
-        ...prev,
-        answers: nextAnswers,
-        completed: true,
-        missionsChecked: [false, false, false, false],
-        sliders: calibratedSliders,
-      }));
+      setAppState((prev) => ({ ...prev, draftAnswers: nextDraft }));
       if (advanceTimerRef.current) window.clearTimeout(advanceTimerRef.current);
       advanceTimerRef.current = window.setTimeout(() => {
-        setViewMode('result');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 200);
+        finalizeDraftToResult(nextDraft);
+      }, 190);
     }
   };
 
@@ -192,16 +248,50 @@ export default function App() {
       // Ignore storage errors
     }
     setAppState(DEFAULT_STATE);
-    setCurrentStep(0);
+    setPreviewMode('sample_leak');
     setViewMode('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast('저장된 모든 진단 기록과 시뮬레이터 설정을 초기화했습니다.');
   };
 
   const activeArchive = PRECISION_TYPES[selectedArchiveType];
+  const activeArchiveProfile = TYPE_SAMPLE_PROFILES[selectedArchiveType];
   const savedPrimaryType = savedAnalysis
     ? PRECISION_TYPES[savedAnalysis.primaryTypeKey]
     : null;
+
+  const effectivePreviewMode: PreviewMode =
+    previewMode === 'saved_user' && !savedAnalysis ? 'sample_leak' : previewMode;
+
+  const activePreviewData =
+    effectivePreviewMode === 'saved_user' && savedAnalysis && savedPrimaryType
+      ? {
+          title: savedPrimaryType.title,
+          score: savedAnalysis.totalScore,
+          scores: savedAnalysis.domainScores,
+          badgeText: `${SEGMENT_META[appState.completedSegment].badge} · 내 측정 결과`,
+        }
+      : {
+          title:
+            SAMPLE_PREVIEW_PROFILES[
+              effectivePreviewMode === 'sample_balanced'
+                ? 'sample_balanced'
+                : 'sample_leak'
+            ].title,
+          score:
+            SAMPLE_PREVIEW_PROFILES[
+              effectivePreviewMode === 'sample_balanced'
+                ? 'sample_balanced'
+                : 'sample_leak'
+            ].score,
+          scores:
+            SAMPLE_PREVIEW_PROFILES[
+              effectivePreviewMode === 'sample_balanced'
+                ? 'sample_balanced'
+                : 'sample_leak'
+            ].scores,
+          badgeText: `${SEGMENT_META[appState.segment].badge} · 미리보기`,
+        };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F3] text-[#1E1D1A]">
@@ -217,7 +307,11 @@ export default function App() {
 
       <main className="flex-1">
         {viewMode === 'home' && (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.22 }}
+          >
             {/* Hero Section */}
             <section
               id="hero"
@@ -225,7 +319,7 @@ export default function App() {
             >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
                 {/* Left Column: Proposition & Segment Selection */}
-                <div className="lg:col-span-7 flex flex-col justify-between space-y-7">
+                <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
                   <div className="space-y-4">
                     <p className="text-xs sm:text-sm font-medium text-[#57534C]">
                       소비 습관 테스트 · 6대 역량 분석 · 맞춤 지출 개선
@@ -242,33 +336,52 @@ export default function App() {
                     </p>
                   </div>
 
-                  {/* Saved Report Resume Bar */}
-                  {savedAnalysis && savedPrimaryType && (
-                    <div className="bg-[#F2EFE7] border border-[#E5DFD3] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="space-y-0.5 min-w-0">
-                        <p className="text-xs font-semibold text-[#1F4E3D]">
-                          저장된 진단 리포트 이어보기
-                        </p>
-                        <p className="text-sm font-semibold text-[#1E1D1A] truncate">
-                          {savedPrimaryType.title} · 종합{' '}
-                          <span className="font-mono tabular-nums">
-                            {savedAnalysis.totalScore}점
-                          </span>{' '}
-                          (상위 {savedAnalysis.topPercentile}%)
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setViewMode('result');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="px-4 py-2.5 min-h-[40px] rounded-lg bg-white hover:bg-[#FAF8F3] border border-[#E5DFD3] text-xs sm:text-sm font-semibold text-[#1E1D1A] transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                      >
-                        리포트 열기
-                      </button>
+                  {/* Saved Report or In-Progress Draft Resume Bar */}
+                  {(savedAnalysis && savedPrimaryType) || draftAnsweredCount > 0 ? (
+                    <div className="space-y-2.5">
+                      {savedAnalysis && savedPrimaryType && (
+                        <div className="bg-[#F2EFE7] border border-[#E5DFD3] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-xs font-semibold text-[#1F4E3D]">
+                              저장된 진단 리포트 이어보기
+                            </p>
+                            <p className="text-sm font-semibold text-[#1E1D1A] truncate">
+                              {savedPrimaryType.title} · 종합{' '}
+                              <span className="font-mono tabular-nums">
+                                {savedAnalysis.totalScore}점
+                              </span>{' '}
+                              (상위 {savedAnalysis.topPercentile}%)
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setViewMode('result');
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="px-4 py-2 min-h-[40px] rounded-lg bg-white hover:bg-[#FAF8F3] border border-[#E5DFD3] text-xs sm:text-sm font-semibold text-[#1E1D1A] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                          >
+                            리포트 열기
+                          </button>
+                        </div>
+                      )}
+
+                      {draftAnsweredCount > 0 && draftAnsweredCount < 12 && (
+                        <div className="bg-[#EAF1EE] border border-[#C6DBD1] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                          <span className="text-xs sm:text-sm font-medium text-[#1E1D1A]">
+                            작성 중인 진단이 있습니다 ({draftAnsweredCount}/12문항 응답 완료)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleResumeDraftQuiz}
+                            className="text-xs sm:text-sm font-semibold text-[#1F4E3D] hover:underline underline-offset-4 cursor-pointer whitespace-nowrap shrink-0"
+                          >
+                            계속 풀기 →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Step 1: Segment Switch + Primary CTA */}
                   <div className="bg-white border border-[#E5DFD3] rounded-2xl p-5 sm:p-6 space-y-4">
@@ -331,23 +444,64 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Right Column: Live Editorial Dossier Preview */}
-                <div className="lg:col-span-5 bg-white border border-[#E5DFD3] rounded-2xl p-6 flex flex-col justify-between space-y-5">
-                  <div className="space-y-1 pb-4 border-b border-[#E5DFD3]">
-                    <div className="flex items-center justify-between text-xs text-[#7D776C]">
-                      <span>진단 리포트 미리보기</span>
-                      <span>{SEGMENT_META[appState.segment].badge}</span>
+                {/* Right Column: Interactive Live Diagnostic Preview */}
+                <div className="lg:col-span-5 bg-white border border-[#E5DFD3] rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3 pb-4 border-b border-[#E5DFD3]">
+                    <div className="flex items-center justify-between gap-2 text-xs text-[#7D776C]">
+                      <span>{activePreviewData.badgeText}</span>
+                      <span className="font-mono tabular-nums font-semibold text-[#1F4E3D]">
+                        {activePreviewData.score} / 100점
+                      </span>
                     </div>
+
                     <p className="font-serif text-lg font-bold text-[#1E1D1A]">
-                      6대 소비 역량 다차원 프로파일
+                      {activePreviewData.title}
                     </p>
+
+                    <div className="flex flex-wrap items-center gap-1 p-1 bg-[#F2EFE7] border border-[#E5DFD3] rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('sample_leak')}
+                        className={`flex-1 px-2.5 py-1.5 min-h-[34px] rounded-md text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                          effectivePreviewMode === 'sample_leak'
+                            ? 'bg-white text-[#1E1D1A] border border-[#E5DFD3]'
+                            : 'text-[#57534C] hover:text-[#1E1D1A]'
+                        }`}
+                      >
+                        소확행 누수형
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewMode('sample_balanced')}
+                        className={`flex-1 px-2.5 py-1.5 min-h-[34px] rounded-md text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                          effectivePreviewMode === 'sample_balanced'
+                            ? 'bg-white text-[#1E1D1A] border border-[#E5DFD3]'
+                            : 'text-[#57534C] hover:text-[#1E1D1A]'
+                        }`}
+                      >
+                        스마트 실속파
+                      </button>
+                      {savedAnalysis && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewMode('saved_user')}
+                          className={`flex-1 px-2.5 py-1.5 min-h-[34px] rounded-md text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer ${
+                            effectivePreviewMode === 'saved_user'
+                              ? 'bg-white text-[#1F4E3D] border border-[#E5DFD3]'
+                              : 'text-[#57534C] hover:text-[#1E1D1A]'
+                          }`}
+                        >
+                          내 리포트
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="bg-[#FAF8F3] border border-[#E5DFD3] rounded-xl py-4 px-3">
-                    <RadarChart scores={SAMPLE_PREVIEW_SCORES[appState.segment]} compact />
+                    <RadarChart scores={activePreviewData.scores} compact />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="bg-[#F2EFE7]/70 rounded-lg p-3">
                       <span className="text-[#7D776C] block mb-0.5">도출 결과</span>
                       <span className="font-semibold text-[#1E1D1A]">
@@ -425,7 +579,7 @@ export default function App() {
                   {DOMAINS.map((domain) => (
                     <div
                       key={domain.key}
-                      className="bg-white border border-[#E5DFD3] rounded-xl p-6 space-y-2.5"
+                      className="bg-white border border-[#E5DFD3] rounded-xl p-6 space-y-2.5 hover:border-[#CFC7B7] transition-colors"
                     >
                       <div className="flex items-center justify-between text-xs text-[#7D776C]">
                         <span className="font-mono font-semibold text-[#1F4E3D]">
@@ -517,7 +671,44 @@ export default function App() {
                         {activeArchive.desc}
                       </p>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      {/* 6-Axis Typical Profile Snapshot */}
+                      <div className="bg-[#FAF8F3] border border-[#E5DFD3] rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-[#1E1D1A]">
+                            대표 6대 지표 프로파일
+                          </span>
+                          <span className="text-[#7D776C]">전형적 분포 기준</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2.5">
+                          {DOMAINS.map((dom) => {
+                            const val = activeArchiveProfile[dom.key];
+                            const barBg =
+                              val >= 75
+                                ? 'bg-[#1F4E3D]'
+                                : val < 40
+                                ? 'bg-[#B43C32]'
+                                : 'bg-[#B5781D]';
+                            return (
+                              <div key={dom.key} className="space-y-1">
+                                <div className="flex items-center justify-between text-[11.5px]">
+                                  <span className="text-[#57534C]">{dom.short}</span>
+                                  <span className="font-mono tabular-nums font-semibold text-[#1E1D1A]">
+                                    {val}점
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-[#E5DFD3] rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full ${barBg} rounded-full transition-all duration-300`}
+                                    style={{ width: `${val}%` }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                         <div className="bg-[#FAF8F3] border border-[#E5DFD3] rounded-xl p-4 space-y-1">
                           <span className="text-xs text-[#7D776C] block">
                             주요 누수 패턴
@@ -586,23 +777,38 @@ export default function App() {
                 />
               </div>
             </section>
-          </>
+          </motion.div>
         )}
 
         {viewMode === 'quiz' && (
           <QuizWorkspace
             segment={appState.segment}
-            currentStep={currentStep}
-            answers={appState.answers}
+            currentStep={appState.draftStep}
+            answers={appState.draftAnswers}
             onSelectOption={handleSelectOption}
-            onPrevStep={() => setCurrentStep((s) => Math.max(0, s - 1))}
+            onJumpStep={(stepIndex) =>
+              setAppState((prev) => ({ ...prev, draftStep: stepIndex }))
+            }
+            onPrevStep={() =>
+              setAppState((prev) => ({
+                ...prev,
+                draftStep: Math.max(0, prev.draftStep - 1),
+              }))
+            }
+            onNextStep={() =>
+              setAppState((prev) => ({
+                ...prev,
+                draftStep: Math.min(11, prev.draftStep + 1),
+              }))
+            }
+            onFinishQuiz={() => finalizeDraftToResult(appState.draftAnswers)}
             onExitHome={() => setViewMode('home')}
           />
         )}
 
         {viewMode === 'result' && savedAnalysis && (
           <ResultDossier
-            segment={appState.segment}
+            segment={appState.completedSegment}
             analysis={savedAnalysis}
             missionsChecked={appState.missionsChecked}
             onToggleMission={handleToggleMission}
@@ -610,6 +816,7 @@ export default function App() {
             onChangeSliders={handleUpdateSliders}
             wishlist={appState.wishlist}
             onChangeWishlist={handleUpdateWishlist}
+            onEditQuestion={handleEditQuestionFromResult}
             onRetakeQuiz={handleStartQuiz}
             onResetAll={handleResetAll}
             onNotify={showToast}

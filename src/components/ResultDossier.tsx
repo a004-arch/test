@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Check, Copy, Download, RotateCcw, Trash2, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Download,
+  Pencil,
+  RotateCcw,
+  Trash2,
+  X,
+} from 'lucide-react';
 import {
   AnalysisResult,
   DOMAINS,
@@ -27,6 +37,7 @@ interface ResultDossierProps {
   onChangeSliders: (next: SliderValues) => void;
   wishlist: WishlistGoal;
   onChangeWishlist: (next: WishlistGoal) => void;
+  onEditQuestion: (qIdxZeroBased: number) => void;
   onRetakeQuiz: () => void;
   onResetAll: () => void;
   onNotify: (msg: string) => void;
@@ -41,11 +52,13 @@ export function ResultDossier({
   onChangeSliders,
   wishlist,
   onChangeWishlist,
+  onEditQuestion,
   onRetakeQuiz,
   onResetAll,
   onNotify,
 }: ResultDossierProps) {
   const [activeGuide, setActiveGuide] = useState<SolutionGuide | null>(null);
+  const [showFullAudit, setShowFullAudit] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,8 +117,8 @@ export function ResultDossier({
   }
   const tailoredSolutions = chosenSolutionKeys.map((k) => DOMAIN_SOLUTIONS[k]);
 
-  const handleDownloadPng = () => {
-    const ok = exportReportCardPng(
+  const handleDownloadPng = async () => {
+    const ok = await exportReportCardPng(
       analysis,
       segment,
       simMetrics.yearlyTotal,
@@ -363,7 +376,14 @@ export function ResultDossier({
                         {weakObj.short} ({weakObj.score}점)
                       </span>
                     </span>
-                    <span className="font-mono text-[#7D776C]">문항 Q{picked.qIndex}</span>
+                    <button
+                      type="button"
+                      onClick={() => onEditQuestion(picked.qIndex - 1)}
+                      className="inline-flex items-center gap-1 font-mono text-[#57534C] hover:text-[#1F4E3D] cursor-pointer"
+                    >
+                      <span>문항 Q{picked.qIndex} 수정</span>
+                      <Pencil className="w-3 h-3" />
+                    </button>
                   </div>
                   <p className="text-sm font-semibold text-[#1E1D1A]">
                     {weakObj.leakTitle}
@@ -470,6 +490,12 @@ export function ResultDossier({
               );
             })}
           </div>
+
+          {completedMissionCount === 4 && (
+            <div className="bg-[#EAF1EE] border border-[#C6DBD1] rounded-xl px-4 py-3 text-xs font-semibold text-[#1F4E3D]">
+              4가지 핵심 개선 미션을 모두 완료했습니다. 아래 시뮬레이터에서 줄어든 지출이 3년 뒤 얼마가 되는지 확인해 보세요.
+            </div>
+          )}
         </div>
       </div>
 
@@ -527,7 +553,77 @@ export function ResultDossier({
         </div>
       </div>
 
-      {/* 6. Retake & Reset Footer Actions */}
+      {/* 6. Full 12-Question Response Audit & Quick Edit */}
+      <div className="bg-white border border-[#E5DFD3] rounded-2xl p-6 sm:p-8">
+        <button
+          type="button"
+          onClick={() => setShowFullAudit((open) => !open)}
+          aria-expanded={showFullAudit}
+          className="w-full flex items-center justify-between gap-4 text-left cursor-pointer"
+        >
+          <div>
+            <h2 className="font-serif text-lg sm:text-xl font-bold text-[#1E1D1A]">
+              12문항 전체 응답 내역 점검 및 수정
+            </h2>
+            <p className="text-xs text-[#57534C] mt-1">
+              문항별 점수를 확인하고, 변동된 습관이 있다면 해당 문항만 바로 수정해 재진단할 수 있습니다.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1F4E3D] shrink-0">
+            <span>{showFullAudit ? '접기' : '펼쳐보기'}</span>
+            {showFullAudit ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </span>
+        </button>
+
+        {showFullAudit && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-6 mt-6 border-t border-[#E5DFD3]">
+            {analysis.itemRecords.map((rec) => {
+              const domainName = DOMAINS.find((d) => d.key === rec.domain)?.short || '';
+              const scoreColor =
+                rec.score >= 75
+                  ? 'text-[#1F4E3D]'
+                  : rec.score >= 50
+                  ? 'text-[#B5781D]'
+                  : 'text-[#B43C32]';
+              return (
+                <div
+                  key={rec.qIndex}
+                  className="bg-[#FAF8F3] border border-[#E5DFD3] rounded-xl p-4 flex flex-col justify-between gap-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="font-semibold text-[#57534C]">
+                      <span className="font-mono text-[#1E1D1A]">Q{rec.qIndex}</span> ·{' '}
+                      {domainName} · {rec.topic}
+                    </span>
+                    <span className={`font-mono tabular-nums font-bold ${scoreColor}`}>
+                      {rec.score}점
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#1E1D1A] leading-relaxed">
+                    “{rec.selectedText}”
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => onEditQuestion(rec.qIndex - 1)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#1F4E3D] hover:underline underline-offset-4 cursor-pointer"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      <span>응답 수정</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 7. Retake & Reset Footer Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 pb-6">
         <button
           type="button"

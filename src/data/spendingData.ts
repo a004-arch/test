@@ -92,8 +92,11 @@ export interface AnalysisResult {
 
 export interface AppState {
   segment: Segment;
+  completedSegment: Segment;
   completed: boolean;
   answers: (number | null)[];
+  draftStep: number;
+  draftAnswers: (number | null)[];
   missionsChecked: boolean[];
   sliders: SliderValues;
   wishlist: WishlistGoal;
@@ -877,5 +880,21 @@ export function computeSimulatorMetrics(
     safePrice,
     yearPercent,
     monthsNeeded,
+    breakdown: {
+      cafe: mCafe,
+      delivery: mDelivery,
+      impulse: mImpulse,
+      fixed: mFixed,
+      micro: mMicro,
+    },
   };
 }
+
+export const TYPE_SAMPLE_PROFILES: Record<PrecisionType['id'], Record<DomainKey, number>> = {
+  T1: { plan: 48, impulse: 25, micro: 58, fixed: 60, value: 52, saving: 38 },
+  T2: { plan: 60, impulse: 62, micro: 28, fixed: 65, value: 55, saving: 46 },
+  T3: { plan: 56, impulse: 68, micro: 64, fixed: 25, value: 60, saving: 44 },
+  T4: { plan: 62, impulse: 45, micro: 54, fixed: 62, value: 28, saving: 50 },
+  T5: { plan: 76, impulse: 72, micro: 58, fixed: 75, value: 78, saving: 72 },
+  T6: { plan: 94, impulse: 88, micro: 86, fixed: 92, value: 90, saving: 95 },
+};
